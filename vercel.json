@@ -1,32 +1,32 @@
 {
   "crons": [
-    {
-      "path": "/api/cron/boost-expire",
-      "schedule": "*/10 * * * *"
-    },
-    {
-      "path": "/api/cron/boost-pulse",
-      "schedule": "0 */3 * * *"
-    },
-    {
-      "path": "/api/cron/boost-subscription",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/boost-refresh",
-      "schedule": "*/10 * * * *"
-    },
-     {
-      "path": "/api/cron/boost-cleanup",
-      "schedule": "*/10 * * * *"
-    },
-      {
-      "path": "/api/cron/boost-clean",
-      "schedule": "*/30 * * * *"
-    },
-    {
-      "path": "/api/cron/rank",
-      "schedule": "*/10 * * * *"
-    }
-  ]
+  {
+    "path": "/api/cron/boost-expire",
+    "schedule": "0 * * * *"
+  },
+  {
+    "path": "/api/cron/boost-pulse",
+    "schedule": "0 */3 * * *"
+  },
+  {
+    "path": "/api/cron/boost-subscription",
+    "schedule": "0 */6 * * *"
+  },
+  {
+    "path": "/api/cron/boost-refresh",
+    "schedule": "0 * * * *"
+  },
+  {
+    "path": "/api/cron/boost-cleanup",
+    "schedule": "0 * * * *"
+  },
+  {
+    "path": "/api/cron/boost-clean",
+    "schedule": "0 0 * * *"
+  },
+  {
+    "path": "/api/cron/rank",
+    "schedule": "0 * * * *"
+  }
+]
 }
