@@ -2,23 +2,27 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// ⚠️ Client Supabase (server-safe)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: { page?: string; category?: string }
+  searchParams?: { page?: string; category?: string }
 }) {
-
-  const page = Number(searchParams?.page || 1)
+  const page = Number(searchParams?.page ?? 1)
   const limit = 10
   const from = (page - 1) * limit
   const to = from + limit - 1
 
-  const category = searchParams?.category || ''
+  const category = searchParams?.category ?? ''
   const now = new Date()
 
   let query = supabase
@@ -42,9 +46,13 @@ export default async function HomePage({
     query = query.eq('category', category)
   }
 
-  const { data } = await query
+  const { data, error } = await query
 
-  const listings = (data || []).filter((item: any) => {
+  if (error) {
+    console.error('Supabase error:', error)
+  }
+
+  const listings = (data ?? []).filter((item: any) => {
     if (!item.boosted) return true
     if (!item.boost_expires_at) return true
     return new Date(item.boost_expires_at) > now
@@ -57,7 +65,8 @@ export default async function HomePage({
         🛒 Annonces Seychelles
       </h1>
 
-      <form className="mb-3">
+      {/* FILTRE */}
+      <form className="mb-3" method="GET">
         <select
           name="category"
           defaultValue={category}
@@ -70,15 +79,24 @@ export default async function HomePage({
           <option value="autre">Autre</option>
         </select>
 
-        <button className="mt-2 w-full bg-black text-white p-2 rounded text-sm">
+        <button
+          type="submit"
+          className="mt-2 w-full bg-black text-white p-2 rounded text-sm"
+        >
           Filtrer
         </button>
       </form>
 
+      {/* LISTE */}
       <div className="space-y-1">
 
-        {listings?.map((item: any) => {
+        {listings.length === 0 && (
+          <p className="text-sm text-gray-500">
+            Aucune annonce disponible
+          </p>
+        )}
 
+        {listings.map((item: any) => {
           const image = item.listing_images?.[0]?.image_url
 
           return (
@@ -99,15 +117,12 @@ export default async function HomePage({
                     className="object-cover w-full h-full"
                   />
                 ) : (
-                  <div className="w-14 h-14 bg-gray-100 rounded flex items-center justify-center text-xs text-gray-400">
-                    📷
-                  </div>
+                  <span className="text-xs text-gray-400">📷</span>
                 )}
               </div>
 
               {/* TEXTE */}
               <div className="flex-1">
-
                 <p className="text-sm font-medium line-clamp-1">
                   {item.title}
                 </p>
@@ -115,12 +130,10 @@ export default async function HomePage({
                 <p className="text-xs text-gray-500">
                   📍 {item.location || 'Seychelles'}
                 </p>
-
               </div>
 
               {/* PRIX */}
               <div className="text-right">
-
                 <p className="text-sm font-bold text-green-600">
                   {item.price} €
                 </p>
@@ -130,15 +143,14 @@ export default async function HomePage({
                     🚀
                   </p>
                 )}
-
               </div>
 
             </Link>
           )
         })}
-
       </div>
 
+      {/* PAGINATION */}
       <div className="flex justify-between mt-4 text-sm">
 
         {page > 1 ? (
