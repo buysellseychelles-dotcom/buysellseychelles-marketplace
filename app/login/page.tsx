@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-export default function LoginPage() {
-
+function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const confirmed = searchParams.get('confirmed')
@@ -20,7 +19,7 @@ export default function LoginPage() {
       if (user) router.push('/post-ad')
     }
     checkUser()
-  }, [])
+  }, [router])
 
   const login = async () => {
     setLoading(true)
@@ -53,7 +52,7 @@ export default function LoginPage() {
 
     if (error) return alert(error.message)
 
-    alert("Compte créé ✔ check email")
+    alert('Compte créé ✔ check email')
   }
 
   return (
@@ -84,14 +83,30 @@ export default function LoginPage() {
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <button onClick={login} className="bg-black text-white w-full p-2 mb-2">
+      <button
+        onClick={login}
+        disabled={loading}
+        className="bg-black text-white w-full p-2 mb-2"
+      >
         Login
       </button>
 
-      <button onClick={signup} className="border w-full p-2">
+      <button
+        onClick={signup}
+        disabled={loading}
+        className="border w-full p-2"
+      >
         Signup
       </button>
 
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Chargement...</div>}>
+      <LoginContent />
+    </Suspense>
   )
 }
