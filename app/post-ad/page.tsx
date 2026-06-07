@@ -16,6 +16,12 @@ export default function PostAdPage() {
   const [category, setCategory] = useState('')
   const [images, setImages] = useState<FileList | null>(null)
 
+  // ✅ LOGOUT AJOUTÉ
+  const logout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
   const handleSubmit = async (e: any) => {
     e.preventDefault()
 
@@ -70,6 +76,16 @@ export default function PostAdPage() {
 
   return (
     <div className="max-w-xl mx-auto p-6">
+
+      {/* ✅ LOGOUT BUTTON */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={logout}
+          className="text-red-500 text-sm"
+        >
+          Logout
+        </button>
+      </div>
 
       <h1 className="text-2xl font-bold mb-4">
         Publier une annonce

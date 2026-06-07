@@ -1,10 +1,10 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-function LoginContent() {
+export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const confirmed = searchParams.get('confirmed')
@@ -13,15 +13,20 @@ function LoginContent() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const [view, setView] = useState<'form' | 'checkEmail'>('form')
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) router.push('/post-ad')
     }
+
     checkUser()
   }, [router])
 
   const login = async () => {
+    if (loading) return
+
     setLoading(true)
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -31,16 +36,20 @@ function LoginContent() {
 
     setLoading(false)
 
-    if (error) return alert(error.message)
+    if (error) {
+      alert(error.message)
+      return
+    }
 
-    await supabase.auth.refreshSession()
     router.push('/post-ad')
   }
 
   const signup = async () => {
+    if (loading) return
+
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -50,9 +59,13 @@ function LoginContent() {
 
     setLoading(false)
 
-    if (error) return alert(error.message)
+    if (error) {
+      alert(error.message)
+      return
+    }
 
-    alert('Compte créé ✔ check email')
+    // 👉 AU LIEU DE RESTER SUR FORM
+    setView('checkEmail')
   }
 
   return (
@@ -68,45 +81,65 @@ function LoginContent() {
         </div>
       )}
 
-      <input
-        placeholder="Email"
-        className="border p-2 w-full mb-2"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+      {/* ===================== */}
+      {/* VIEW FORM */}
+      {/* ===================== */}
+      {view === 'form' && (
+        <>
+          <input
+            placeholder="Email"
+            className="border p-2 w-full mb-2"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-      <input
-        placeholder="Password"
-        type="password"
-        className="border p-2 w-full mb-2"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+          <input
+            placeholder="Password"
+            type="password"
+            className="border p-2 w-full mb-2"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-      <button
-        onClick={login}
-        disabled={loading}
-        className="bg-black text-white w-full p-2 mb-2"
-      >
-        Login
-      </button>
+          <button
+            onClick={login}
+            disabled={loading}
+            className="bg-black text-white w-full p-2 mb-2"
+          >
+            {loading ? "Loading..." : "Login"}
+          </button>
 
-      <button
-        onClick={signup}
-        disabled={loading}
-        className="border w-full p-2"
-      >
-        Signup
-      </button>
+          <button
+            onClick={signup}
+            disabled={loading}
+            className="border w-full p-2"
+          >
+            {loading ? "Loading..." : "Signup"}
+          </button>
+        </>
+      )}
+
+      {/* ===================== */}
+      {/* VIEW CHECK EMAIL */}
+      {/* ===================== */}
+      {view === 'checkEmail' && (
+        <div className="text-center space-y-4">
+
+          <div className="bg-green-100 p-4">
+            <p className="font-bold">Compte créé ✔</p>
+            <p>Un email de confirmation a été envoyé.</p>
+          </div>
+
+          <button
+            onClick={() => setView('form')}
+            className="border px-4 py-2"
+          >
+            Retour vers login
+          </button>
+
+        </div>
+      )}
 
     </div>
-  )
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="p-6">Chargement...</div>}>
-      <LoginContent />
-    </Suspense>
   )
 }
