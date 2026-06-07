@@ -1,18 +1,10 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LoginContent />
-    </Suspense>
-  )
-}
-
-function LoginContent() {
+export default function LoginClient() {
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -21,6 +13,7 @@ function LoginContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+
   const [view, setView] = useState<'form' | 'checkEmail'>('form')
 
   useEffect(() => {
@@ -131,7 +124,7 @@ function LoginContent() {
 
           <div className="bg-green-100 p-4">
             <p className="font-bold">Compte créé ✔</p>
-            <p>Vérifie ton email pour confirmer ton compte</p>
+            <p>Un email de confirmation a été envoyé</p>
           </div>
 
           <button
@@ -140,6 +133,7 @@ function LoginContent() {
           >
             Retour login
           </button>
+
         </div>
       )}
 
