@@ -1,21 +1,31 @@
 import Stripe from 'stripe'
 import { NextResponse } from 'next/server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-
 export async function POST(req: Request) {
-
   try {
+    const stripeKey = process.env.STRIPE_SECRET_KEY
+
+    if (!stripeKey) {
+      throw new Error('Missing STRIPE_SECRET_KEY')
+    }
+
+    const stripe = new Stripe(stripeKey)
+
     const { listingId, boostType } = await req.json()
 
     if (!listingId) {
       return NextResponse.json({ error: 'Missing listingId' }, { status: 400 })
     }
 
-    let price = 500 // standard 5€
-
+    let price = 500
     if (boostType === 'premium') price = 1000
     if (boostType === 'ultra') price = 2000
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+
+    if (!siteUrl) {
+      throw new Error('Missing NEXT_PUBLIC_SITE_URL')
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -32,14 +42,9 @@ export async function POST(req: Request) {
           quantity: 1,
         },
       ],
-
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/listing/${listingId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/listing/${listingId}`,
-
-      metadata: {
-        listingId,
-        type: boostType,
-      },
+      success_url: `${siteUrl}/listing/${listingId}`,
+      cancel_url: `${siteUrl}/listing/${listingId}`,
+      metadata: { listingId, type: boostType },
     })
 
     return NextResponse.json({ url: session.url })

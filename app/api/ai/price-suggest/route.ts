@@ -1,35 +1,26 @@
-import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+type Listing = { price: number }
 
 export async function POST(req: Request) {
+  const { category } = await req.json()
 
-  const body = await req.json()
-
-  const { title, category } = body
-
-  // 🔍 on récupère annonces similaires
-  const { data: listings } = await supabase
+  const { data } = await supabaseAdmin
     .from('listings')
     .select('price')
     .eq('category', category)
 
-  if (!listings || listings.length === 0) {
-    return Response.json({
-      suggested_price: 100
-    })
+  const listings = (data ?? []) as Listing[]
+
+  if (listings.length === 0) {
+    return NextResponse.json({ suggested_price: 100 })
   }
 
   const avg =
-    listings.reduce((sum, l) => sum + l.price, 0) / listings.length
+    listings.reduce((s, l) => s + l.price, 0) / listings.length
 
-  // 🔥 optimisation IA simple
-  const suggested_price = Math.round(avg * 0.95)
-
-  return Response.json({
-    suggested_price
+  return NextResponse.json({
+    suggested_price: Math.round(avg * 0.95),
   })
 }

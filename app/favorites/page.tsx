@@ -1,12 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_ANON_KEY!
-)
+import { createClient } from '@supabase/supabase-js'
 
 export default async function FavoritesPage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const { data: userData } = await supabase.auth.getUser()
   const user = userData?.user
@@ -29,32 +28,20 @@ export default async function FavoritesPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-
-      <h1 className="text-2xl font-bold mb-6">
-        Mes favoris
-      </h1>
+      <h1 className="text-2xl font-bold mb-6">Mes favoris</h1>
 
       <div className="space-y-3">
-
         {favs?.map((fav: any) => (
           <Link
             key={fav.listing_id}
             href={`/listing/${fav.listing_id}`}
             className="border p-3 rounded block hover:shadow"
           >
-            <p className="font-bold">
-              {fav.listings?.title}
-            </p>
-
-            <p className="text-gray-600">
-              {fav.listings?.price} €
-            </p>
-
+            <p className="font-bold">{fav.listings?.title}</p>
+            <p className="text-gray-600">{fav.listings?.price} €</p>
           </Link>
         ))}
-
       </div>
-
     </div>
   )
 }
