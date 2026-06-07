@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabase } from '@/lib/supabase'
 
 type Listing = { price: number }
 
 export async function POST(req: Request) {
   const { category } = await req.json()
 
-  const { data } = await supabaseAdmin
+  const { data } = await supabase
     .from('listings')
     .select('price')
     .eq('category', category)
