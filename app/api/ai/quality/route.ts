@@ -1,4 +1,10 @@
+import { rateLimit, getClientIP, tooManyRequests } from '@/lib/rate-limit'
+
 export async function POST(req: Request) {
+  // 20 appels IA max par heure par IP
+  const ip = getClientIP(req)
+  const rl = rateLimit(`ai-quality:${ip}`, 20, 60 * 60 * 1000)
+  if (!rl.allowed) return tooManyRequests(rl.resetAt)
 
   const body = await req.json()
 
