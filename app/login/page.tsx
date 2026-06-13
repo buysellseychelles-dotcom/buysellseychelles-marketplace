@@ -165,11 +165,11 @@ function LoginContent() {
           {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>}
 
           <div className="space-y-3">
-            <input type="email" placeholder={t(lang, 'email_placeholder')} value={email}
+            <input type="email" placeholder="Email" value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleSignup())}
               className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black" />
-            <input type="password" placeholder={t(lang, 'password_placeholder')} value={password}
+            <input type="password" placeholder="Password" value={password}
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleSignup())}
               className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black" />
