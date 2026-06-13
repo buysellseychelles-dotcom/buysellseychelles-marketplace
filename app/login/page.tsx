@@ -131,14 +131,15 @@ function LoginContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 relative">
       <Link href="/"
-        className="absolute top-4 left-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        className="absolute top-4 left-4 flex items-center gap-2 text-white text-sm font-medium px-4 py-2 rounded-full shadow-md hover:opacity-90 transition-opacity"
+        style={{ background: 'linear-gradient(135deg, #003F87 0%, #003F87 22%, #FCD116 44%, #BE0027 66%, #007A3D 100%)' }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
-        Back
+        Retour
       </Link>
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md overflow-hidden">
-        <div className="px-8 py-7 text-center" style={{ background: 'linear-gradient(135deg, #003F87 0%, #003F87 40%, #007A3D 100%)' }}>
+        <div className="px-8 py-7 text-center" style={{ background: 'linear-gradient(135deg, #003F87 0%, #003F87 22%, #FCD116 44%, #BE0027 66%, #007A3D 100%)' }}>
           <p className="text-3xl mb-1">🌴</p>
           <h1 className="text-white text-2xl font-bold">BuySellSeychelles</h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.72)' }}>{t(lang, 'marketplace_tagline')}</p>
