@@ -51,7 +51,14 @@ function LoginContent() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
-    if (error) { setError(t(lang, 'invalid_credentials')); return }
+    if (error) {
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        setError('Please confirm your email first — check your inbox (and spam folder).')
+      } else {
+        setError(t(lang, 'invalid_credentials'))
+      }
+      return
+    }
     router.push(redirectTo)
   }
 
