@@ -38,7 +38,7 @@ export default function PriceSuggest({
       onClick={suggest}
       className="bg-blue-600 text-white px-4 py-2 rounded"
     >
-      {loading ? 'Analyse...' : '💰 Prix recommandé'}
+      {loading ? 'Analysing...' : '💰 Suggested price'}
     </button>
   )
 }

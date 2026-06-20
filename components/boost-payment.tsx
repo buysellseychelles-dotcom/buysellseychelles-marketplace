@@ -17,7 +17,7 @@ export default function BoostPayment({
 
       body: JSON.stringify({
         title: `Boost : ${listing.title}`,
-        amount: 500,
+        amount: 7500, // 75 SCR (centimes ; SCR = devise à 2 décimales)
         listingId: listing.id
       })
     })
@@ -32,7 +32,7 @@ export default function BoostPayment({
       onClick={pay}
       className="bg-yellow-500 text-white px-4 py-2 rounded"
     >
-      🚀 Booster cette annonce — 5€
+      🚀 Boost this listing — 75 SCR
     </button>
   )
 }

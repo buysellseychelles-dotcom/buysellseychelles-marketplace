@@ -1,0 +1,43 @@
+name: DB Backup
+
+# Sauvegarde automatique gratuite de la base Supabase via pg_dump.
+# Nécessite le secret GitHub: SUPABASE_DB_URL (connection string Postgres).
+# Voir DOCS-SAUVEGARDES-SUPABASE.md pour la mise en place.
+
+on:
+  schedule:
+    # Tous les jours à 02h00 UTC.
+    - cron: '0 2 * * *'
+  workflow_dispatch: {} # permet le lancement manuel depuis l'onglet Actions
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Installer le client PostgreSQL 16
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          sudo sed -i 's#deb https#deb [signed-by=/usr/share/keyrings/pgdg.gpg] https#' /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Dump de la base
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Le secret SUPABASE_DB_URL n'est pas défini. Voir DOCS-SAUVEGARDES-SUPABASE.md"
+            exit 1
+          fi
+          STAMP=$(date -u +%Y-%m-%d)
+          pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges | gzip > "db-backup-${STAMP}.sql.gz"
+          ls -lh "db-backup-${STAMP}.sql.gz"
+          echo "STAMP=${STAMP}" >> "$GITHUB_ENV"
+
+      - name: Téléverser l'artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.STAMP }}
+          path: db-backup-${{ env.STAMP }}.sql.gz
+          retention-days: 30

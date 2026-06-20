@@ -1,27 +1,184 @@
 'use client'
 
 import Link from 'next/link'
-import { Home, Plus, User } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useLang } from '@/lib/lang-context'
+import { t } from '@/lib/i18n'
+
+const BLUE = '#003F87'
+
+function IcoSearch() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="16.5" y1="16.5" x2="22" y2="22" />
+    </svg>
+  )
+}
+function IcoHeart({ filled }: { filled: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  )
+}
+function IcoChat({ filled }: { filled: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+function IcoUser({ filled }: { filled: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
+function IcoPlus() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+      <line x1="12" y1="4" x2="12" y2="20" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+    </svg>
+  )
+}
 
 export default function MobileNav() {
+  const pathname = usePathname()
+  const { lang } = useLang()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [unreadMsgs, setUnreadMsgs] = useState(0)
+  const [unreadNotifs, setUnreadNotifs] = useState(0)
+
+  // Mise à jour immédiate quand des messages sont lus ailleurs (conversations/[id])
+  useEffect(() => {
+    const refresh = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: convs } = await supabase.from('conversations')
+        .select('id').or(`user_id.eq.${user.id},seller_id.eq.${user.id}`)
+      const ids = (convs ?? []).map((c: any) => c.id)
+      if (ids.length === 0) { setUnreadMsgs(0); return }
+      const { count } = await supabase.from('messages')
+        .select('id', { count: 'exact', head: true })
+        .in('conversation_id', ids)
+        .neq('sender_id', user.id)
+        .eq('read', false)
+      setUnreadMsgs(count ?? 0)
+    }
+    window.addEventListener('bss-messages-read', refresh)
+    return () => window.removeEventListener('bss-messages-read', refresh)
+  }, [])
+
+  useEffect(() => {
+    const loadCounts = async (userId: string) => {
+      const { data: myConvs } = await supabase.from('conversations')
+        .select('id').or(`user_id.eq.${userId},seller_id.eq.${userId}`)
+      const convIds = (myConvs ?? []).map((c: any) => c.id)
+      let msgCount = 0
+      if (convIds.length > 0) {
+        const { count } = await supabase.from('messages')
+          .select('id', { count: 'exact', head: true })
+          .in('conversation_id', convIds)
+          .neq('sender_id', userId)
+          .eq('read', false)
+        msgCount = count ?? 0
+      }
+      setUnreadMsgs(msgCount)
+
+      const { count: notifs } = await supabase.from('notifications')
+        .select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('read', false)
+      setUnreadNotifs(notifs ?? 0)
+
+      const ch = supabase.channel('unread-nav')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
+          const { data: convs } = await supabase.from('conversations')
+            .select('id').or(`user_id.eq.${userId},seller_id.eq.${userId}`)
+          const ids = (convs ?? []).map((c: any) => c.id)
+          if (ids.length === 0) { setUnreadMsgs(0); return }
+          const { count } = await supabase.from('messages')
+            .select('id', { count: 'exact', head: true })
+            .in('conversation_id', ids)
+            .neq('sender_id', userId)
+            .eq('read', false)
+          setUnreadMsgs(count ?? 0)
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, async () => {
+          const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('read', false)
+          setUnreadNotifs(count ?? 0)
+        })
+        .subscribe()
+      return () => { supabase.removeChannel(ch) }
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const u = session?.user ?? null
+      setIsLoggedIn(!!u)
+      if (!u) { setUnreadMsgs(0); setUnreadNotifs(0); return }
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') loadCounts(u.id)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  if (pathname?.startsWith('/auth') || pathname === '/login') return null
+
+  const isHome    = pathname === '/'
+  const isSaved   = pathname?.startsWith('/favorites')
+  const isChat    = pathname?.startsWith('/conversations')
+  const isMe      = pathname?.startsWith('/dashboard') || pathname?.startsWith('/my-listings')
+
+  const NavItem = ({ active, children, label, href, badge }: {
+    active: boolean; children: React.ReactNode; label: string; href: string; badge?: number
+  }) => (
+    <Link href={href} className="relative flex flex-col items-center justify-center gap-1 flex-1 py-2"
+      style={{ color: active ? BLUE : '#9ca3af' }}>
+      <div className="relative">
+        {children}
+        {badge && badge > 0 ? (
+          <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none">
+            {badge > 9 ? '9+' : badge}
+          </span>
+        ) : null}
+      </div>
+      <span className="text-[11px] font-semibold leading-none">{label}</span>
+      {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ backgroundColor: BLUE }} />}
+    </Link>
+  )
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around p-2 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center md:hidden z-50"
+      style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))', minHeight: '60px' }}>
 
-      <Link href="/" className="flex flex-col items-center text-xs">
-        <Home className="w-5 h-5" />
-        Accueil
+      <NavItem href="/" active={isHome} label={t(lang, 'nav_home')}>
+        <IcoSearch />
+      </NavItem>
+
+      <NavItem href={isLoggedIn ? '/favorites' : '/login'} active={isSaved} label={t(lang, 'nav_saved')}>
+        <IcoHeart filled={isSaved} />
+      </NavItem>
+
+      {/* Post — central elevated */}
+      <Link href="/post-ad" className="flex flex-col items-center justify-center flex-shrink-0 mx-2">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg -mt-5"
+          style={{ backgroundColor: BLUE }}>
+          <IcoPlus />
+        </div>
       </Link>
 
-      <Link href="/create" className="flex flex-col items-center text-xs">
-        <Plus className="w-6 h-6 text-green-600" />
-        Publier
-      </Link>
+      <NavItem href={isLoggedIn ? '/conversations' : '/login'} active={isChat} label={t(lang, 'messages')} badge={unreadMsgs}>
+        <IcoChat filled={isChat} />
+      </NavItem>
 
-      <Link href="/my-listings" className="flex flex-col items-center text-xs">
-        <User className="w-5 h-5" />
-        Moi
-      </Link>
+      <NavItem href={isLoggedIn ? '/dashboard' : '/login'} active={isMe} label={t(lang, 'nav_me')}>
+        <IcoUser filled={isMe} />
+      </NavItem>
 
-    </div>
+    </nav>
   )
 }

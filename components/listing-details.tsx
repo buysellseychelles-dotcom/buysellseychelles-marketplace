@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import BoostButton from '@/components/boost-button'
+import { formatPrice } from '@/lib/utils'
 
 export default function ListingDetail({
   listingId,
@@ -95,8 +96,8 @@ export default function ListingDetail({
     }
   }
 
-  if (listing === null) return <div className="p-10">Chargement...</div>
-  if (listing === false) return <div className="p-10">Annonce introuvable</div>
+  if (listing === null) return <div className="p-10">Loading...</div>
+  if (listing === false) return <div className="p-10">Listing not found</div>
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -104,17 +105,17 @@ export default function ListingDetail({
       <h1 className="text-3xl font-bold">{listing.title}</h1>
 
       <p className="text-2xl font-semibold mb-2">
-        💰 {listing.price} €
+        💰 {formatPrice(listing.price, listing.currency)}
       </p>
 
       {/* 🔥 BOOST STATUS */}
       {isBoostActive ? (
         <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
-          🚀 Boost actif (x2/x3 visibilité)
+          🚀 Boost active (2x/3x visibility)
         </div>
       ) : (
         <div className="mb-4 text-gray-400">
-          Annonce normale
+          Standard listing
         </div>
       )}
 
@@ -122,12 +123,12 @@ export default function ListingDetail({
       <div className="mb-4">
         <BoostButton
           listingId={listing.id}
-          disabled={isBoostActive}
+          ownerId={listing.user_id}
         />
       </div>
 
       <p className="text-sm text-gray-500 mb-4">
-        👁 {views} vues
+        👁 {views} views
       </p>
 
       <button
@@ -136,7 +137,7 @@ export default function ListingDetail({
           isFav ? 'bg-red-500 text-white' : 'bg-gray-200'
         }`}
       >
-        {isFav ? '❤️ Favori' : '🤍 Ajouter aux favoris'}
+        {isFav ? '❤️ Favourite' : '🤍 Add to favourites'}
       </button>
 
       <div className="grid grid-cols-2 gap-3">

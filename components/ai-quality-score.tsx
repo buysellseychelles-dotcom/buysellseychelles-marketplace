@@ -44,7 +44,7 @@ export default function AIQualityScore({
       onClick={analyze}
       className="bg-purple-600 text-white px-4 py-2 rounded"
     >
-      {loading ? 'Analyse...' : '🤖 Score qualité'}
+      {loading ? 'Analysing...' : '🤖 Quality score'}
     </button>
   )
 }

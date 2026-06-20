@@ -38,7 +38,7 @@ export default function AIOptimize({
       onClick={optimize}
       className="bg-black text-white px-4 py-2 rounded"
     >
-      {loading ? 'Optimisation...' : '🤖 Optimiser avec IA'}
+      {loading ? 'Optimizing...' : '🤖 Optimize with AI'}
     </button>
   )
 }

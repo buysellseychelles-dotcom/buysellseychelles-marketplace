@@ -40,6 +40,11 @@ export interface Listing {
   createdAt: string;
   userId: string;
   views: number;
+  boosted?: boolean;
+  boosted_at?: string;
+  boost_expires_at?: string;
+  boost_type?: string;
+  boost_score?: number;
 }
 
 export interface User {

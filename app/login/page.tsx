@@ -17,12 +17,44 @@ export default function LoginPage() {
 
 type View = 'form' | 'checkEmail' | 'forgotPassword' | 'forgotSent'
 
+function validatePassword(pwd: string) {
+  return {
+    length: pwd.length >= 8,
+    upper:  /[A-Z]/.test(pwd),
+    digit:  /[0-9]/.test(pwd),
+    symbol: /[^A-Za-z0-9]/.test(pwd),
+  }
+}
+
+function PasswordStrength({ password, show }: { password: string; show: boolean }) {
+  if (!show || password.length === 0) return null
+  const checks = validatePassword(password)
+  const rules: [keyof typeof checks, string][] = [
+    ['length', 'At least 8 characters'],
+    ['upper',  '1 uppercase letter (A-Z)'],
+    ['digit',  '1 number (0-9)'],
+    ['symbol', '1 special character (!@#$%…)'],
+  ]
+  return (
+    <div className="mt-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 space-y-1">
+      {rules.map(([key, label]) => (
+        <div key={key} className="flex items-center gap-2 text-xs">
+          <span className={checks[key] ? 'text-green-500' : 'text-gray-400'}>
+            {checks[key] ? '✓' : '○'}
+          </span>
+          <span className={checks[key] ? 'text-green-700 font-medium' : 'text-gray-500'}>{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { lang } = useLang()
   const confirmed = searchParams.get('confirmed')
-  const redirectTo = searchParams.get('redirect') || '/post-ad'
+  const redirectTo = searchParams.get('redirect') || '/'
 
   const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [view, setView] = useState<View>('form')
@@ -30,6 +62,8 @@ function LoginContent() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendSent, setResendSent] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -59,20 +93,46 @@ function LoginContent() {
       }
       return
     }
-    router.push(redirectTo)
+    router.push('/')
   }
 
   const handleSignup = async () => {
     if (loading) return
     setError('')
-    if (password.length < 6) { setError(t(lang, 'password_too_short')); return }
+
+    const checks = validatePassword(password)
+    if (!checks.length) { setError('Password must be at least 8 characters.'); return }
+    if (!checks.upper)  { setError('Password must include at least 1 uppercase letter (A-Z).'); return }
+    if (!checks.digit)  { setError('Password must include at least 1 number (0-9).'); return }
+    if (!checks.symbol) { setError('Password must include at least 1 special character (e.g. !@#$%).'); return }
+
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email, password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+      options: { emailRedirectTo: 'https://buysellseychelles.com/auth/callback' }
     })
     setLoading(false)
-    if (error) { setError(error.message); return }
+
+    if (error) {
+      if (
+        error.message.toLowerCase().includes('already registered') ||
+        error.message.toLowerCase().includes('user already exists') ||
+        error.message.toLowerCase().includes('already been registered')
+      ) {
+        setError('This email address is already linked to an account.')
+      } else {
+        setError(error.message)
+      }
+      return
+    }
+
+    // Supabase returns user with empty identities when email is already taken
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setError('This email address is already linked to an account.')
+      return
+    }
+
+    setResendSent(false)
     setView('checkEmail')
   }
 
@@ -82,22 +142,62 @@ function LoginContent() {
     if (!email) { setError(t(lang, 'enter_email_first')); return }
     setLoading(true)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`
+      redirectTo: 'https://buysellseychelles.com/auth/reset-password'
     })
     setLoading(false)
     if (error) { setError(error.message); return }
     setView('forgotSent')
   }
 
+  const handleResend = async () => {
+    if (resendLoading || resendSent) return
+    setResendLoading(true)
+    await supabase.auth.resend({ type: 'signup', email })
+    setResendLoading(false)
+    setResendSent(true)
+  }
+
   if (view === 'checkEmail') return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
+      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
         <div className="text-5xl mb-4">📧</div>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">{t(lang, 'check_email_title')}</h1>
-        <p className="text-gray-500 mb-6">{t(lang, 'check_email_body')} <strong>{email}</strong>. {t(lang, 'check_email_body2')}</p>
-        <button onClick={() => setView('form')} className="border border-gray-300 px-6 py-2 rounded-lg text-sm hover:bg-gray-50">
-          {t(lang, 'back_to_login')}
-        </button>
+        <p className="text-gray-500 mb-4">
+          {t(lang, 'check_email_body')} <strong>{email}</strong>. {t(lang, 'check_email_body2')}
+        </p>
+
+        {/* Spam advice */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left mb-5">
+          <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+            <span>💡</span> Not seeing the email?
+          </p>
+          <ul className="text-xs text-amber-700 mt-1 space-y-0.5 list-disc list-inside">
+            <li>Check your <strong>spam</strong> or <strong>junk</strong> folder</li>
+            <li>Check your <strong>Promotions</strong> tab (Gmail)</li>
+            <li>Make sure you typed your email correctly</li>
+          </ul>
+        </div>
+
+        <div className="space-y-3">
+          {resendSent ? (
+            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl p-3">
+              ✅ Confirmation email resent! Check your inbox and spam folder.
+            </div>
+          ) : (
+            <button
+              onClick={handleResend}
+              disabled={resendLoading}
+              className="w-full border border-gray-300 px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 transition-colors">
+              {resendLoading ? 'Sending…' : '↩ Resend confirmation email'}
+            </button>
+          )}
+
+          <button
+            onClick={() => { setView('form'); setError('') }}
+            className="w-full border border-gray-300 px-6 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+            {t(lang, 'back_to_login')}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -142,7 +242,7 @@ function LoginContent() {
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
-        Retour
+        Back
       </Link>
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md overflow-hidden">
         <div className="px-8 py-7 text-center" style={{ background: 'linear-gradient(135deg, #003F87 0%, #003F87 20%, #FCD116 40%, #BE0027 55%, #FFFFFF 72%, #007A3D 88%, #007A3D 100%)' }}>
@@ -176,10 +276,13 @@ function LoginContent() {
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleSignup())}
               className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black" />
-            <input type="password" placeholder="Password" value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleSignup())}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black" />
+            <div>
+              <input type="password" placeholder="Password" value={password}
+                onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleSignup())}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black" />
+              <PasswordStrength password={password} show={tab === 'signup'} />
+            </div>
           </div>
 
           {tab === 'login' && (

@@ -1,10 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Eye, Star, Clock, Rocket } from 'lucide-react';
 import { WhatsAppButton } from '@/components/whatsapp-button';
 import { formatPrice, formatDate, truncateText } from '@/lib/format';
+import { listingHref } from '@/lib/slug';
+import { useLowData } from '@/hooks/use-low-data';
+import { lowResUrl } from '@/lib/image-quality';
 import type { Listing } from '@/lib/types';
 import { CATEGORIES } from '@/lib/types';
 
@@ -15,6 +19,13 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, priority = false }: ListingCardProps) {
   const category = CATEGORIES.find(c => c.id === listing.category);
+  const lowData = useLowData();
+  const [imgFailed, setImgFailed] = useState(false);
+
+  // Sur réseau faible, on sert une miniature basse résolution (le tap ouvre le
+  // détail, où l'utilisateur peut demander le HD). Si la transformation échoue,
+  // on retombe sur l'image d'origine.
+  const cardImage = lowData && !imgFailed ? lowResUrl(listing.images[0], 480) : listing.images[0];
 
   // 🚀 BOOST ACTIVE
   const isBoostActive =
@@ -33,15 +44,16 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
     }`}>
 
       {/* Image Container */}
-      <Link href={`/listing/${listing.id}`} className="block relative aspect-[4/3] overflow-hidden">
+      <Link href={listingHref(listing)} className="block relative aspect-[4/3] overflow-hidden">
 
         <Image
-          src={listing.images[0]}
+          src={cardImage}
           alt={listing.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover transition-transform duration-300 group-hover:scale-105"
           priority={priority}
+          onError={() => setImgFailed(true)}
         />
 
         {/* 🚀 BOOST BADGE */}
@@ -88,7 +100,7 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
         </div>
 
         {/* Title */}
-        <Link href={`/listing/${listing.id}`}>
+        <Link href={listingHref(listing)}>
           <h3 className="font-semibold text-foreground leading-tight mb-2 line-clamp-2 hover:text-primary transition-colors">
             {truncateText(listing.title, 60)}
           </h3>

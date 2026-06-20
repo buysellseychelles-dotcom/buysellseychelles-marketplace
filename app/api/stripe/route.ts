@@ -15,13 +15,13 @@ export async function POST(req: Request) {
     line_items: [
       {
         price_data: {
-          currency: 'eur',
+          currency: 'scr',
 
           product_data: {
-            name: body.title || 'Boost annonce',
+            name: body.title || 'Listing boost',
           },
 
-          unit_amount: body.amount || 500,
+          unit_amount: body.amount || 7500,
         },
 
         quantity: 1,

@@ -5,10 +5,22 @@
 :root {
   --background: #ffffff;
   --foreground: #111111;
-  --primary: #0ea5e9;
   --radius: 0.75rem;
-
   --border: #e5e5e5;
+
+  /* Seychelles flag colors */
+  --sey-blue:   #003F87;
+  --sey-yellow: #FCD116;
+  --sey-red:    #BE0027;
+  --sey-green:  #007A3D;
+  --sey-white:  #FFFFFF;
+}
+
+@theme inline {
+  --color-sey-blue:   #003F87;
+  --color-sey-yellow: #FCD116;
+  --color-sey-red:    #BE0027;
+  --color-sey-green:  #007A3D;
 }
 
 .dark {

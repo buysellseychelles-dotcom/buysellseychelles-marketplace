@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -36,4 +38,20 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+// Wrappe la config avec Sentry. L'upload des source maps ne se fait que si
+// SENTRY_AUTH_TOKEN / SENTRY_ORG / SENTRY_PROJECT sont définis (sinon ignoré sans erreur).
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  // Réduit les logs pendant le build, sauf en CI.
+  silent: !process.env.CI,
+  // Améliore la lisibilité des stack traces côté navigateur.
+  widenClientFileUpload: true,
+  // Retire les logs de debug Sentry du bundle de production (préserve le quota et allège le bundle).
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+  },
+  // Masque les requêtes Sentry derrière une route de votre domaine (contourne les ad-blockers).
+  tunnelRoute: '/monitoring',
+})

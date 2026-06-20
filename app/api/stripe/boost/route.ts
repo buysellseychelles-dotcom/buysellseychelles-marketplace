@@ -17,9 +17,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing listingId' }, { status: 400 })
     }
 
-    let price = 500
-    if (boostType === 'premium') price = 1000
-    if (boostType === 'ultra') price = 2000
+    // Prix en centimes de SCR (SCR = devise à 2 décimales : 75 SCR = 7500)
+    let price = 7500
+    if (boostType === 'premium') price = 15000
+    if (boostType === 'ultra') price = 30000
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
 
@@ -33,17 +34,17 @@ export async function POST(req: Request) {
       line_items: [
         {
           price_data: {
-            currency: 'eur',
+            currency: 'scr',
             product_data: {
-              name: `Boost annonce (${boostType})`,
+              name: `Listing boost (${boostType})`,
             },
             unit_amount: price,
           },
           quantity: 1,
         },
       ],
-      success_url: `${siteUrl}/listing/${listingId}`,
-      cancel_url: `${siteUrl}/listing/${listingId}`,
+      success_url: `${siteUrl}/success?listingId=${listingId}&boostType=${boostType}`,
+      cancel_url: `${siteUrl}/cancel?listingId=${listingId}`,
       metadata: { listingId, type: boostType },
     })
 

@@ -1,0 +1,356 @@
+============================================================
+  BUYSELLSEYCHELLES — TRADUCTIONS KREOL (à vérifier)
+============================================================
+Format : CLÉ | ANGLAIS | KREOL ACTUEL
+------------------------------------------------------------
+
+=== CATÉGORIES ===
+Tou (All)                          | Tou
+Machin (Vehicles)                  | Machin
+Propriete (Real Estate)            | Propriete
+Elektronik (Electronics)           | Elektronik
+Travay (Jobs)                      | Travay
+Servis (Services)                  | Servis
+Bato (Boats)                       | Bato
+Tourizm (Tourism)                  | Tourizm
+Mod (Fashion)                      | Mod
+Lakaz (Home & Garden)              | Lakaz
+Spor/Lwazip (Sports & Leisure)     | Spor/Lwazip
+Zanimo (Pets & Animals)            | Zanimo
+Gratis (Free & Exchange)           | Gratis
+Ekipman Pro (Pro Equipment)        | Ekipman Pro
+Lot (Other)                        | Lot
+
+=== ÎLES ===
+Tou zil (All islands)              | Tou zil
+La Dig (La Digue)                  | La Dig
+Lot zil (Other islands)            | Lot zil
+
+=== MENU PRINCIPAL ===
+Post ad                            | Pibliy
+Login                              | Koneksyon
+Dashboard                          | Mon tablo
+My listings                        | Mon lanons
+Messages                           | Mesaz
+Notifications                      | Notifikasyon
+My alerts                          | Mon alèrt
+Favourites                         | Favori
+Go PRO                             | Vinn PRO
+Log out                            | Dekonekte
+
+=== RECHERCHE / FILTRES ===
+Search listings...                 | Rod enn lanons...
+All islands                        | Tou zil
+Most recent                        | Pli resan
+Price: low to high                 | Pri: ba a o
+Price: high to low                 | Pri: o a ba
+Most popular                       | Pli popiler
+Island                             | Zil
+District                           | Distrik
+Sort by                            | Triy par
+Min price (SCR)                    | Pri minimum (SCR)
+Max price (SCR)                    | Pri maximum (SCR)
+Clear all filters                  | Efas tou filtèr
+Save search                        | Sov resers
+Alert name (e.g. iPhone 13)        | Non alèrt (egz: iPhone 13)
+Alert saved! You will be notified  | Alèrt kre! Ou pou resevwar enn imel.
+
+=== PAGE D'ACCUEIL ===
+Recent listings                    | Lanons resan
+No listings found                  | Nanyen pa trouv
+Be the first to post!              | Ou premye ki pibliy!
+Price negotiable                   | Pri a diskit
+Load more                          | Vwar plis
+The Seychelles marketplace         | Marse des Sesel
+Buy and sell in the Seychelles     | Aste ek vann o Sesel
+Post an ad                         | + Pibliy enn lanons
+Sign in                            | Konekte
+Free                               | Gratis
+Simple                             | Fasil
+Local                              | Lokal
+
+=== PAGE ANNONCE ===
+Contact seller                     | Kontakte vander
+Contact on WhatsApp                | Kontakte lor WhatsApp
+Make an offer                      | Fer enn ofer
+Report                             | Rapor
+Seller                             | Vander
+View profile                       | Get profil →
+Sold                               | Vande
+Boosted listing                    | Lanons boosté
+Description                        | Deskripsyon
+No description provided            | Nanyen deskripsyon.
+Published                          | Pibliy
+Similar listings                   | Lanons parèy
+Share this listing                 | Partaz sa lanons
+Copy link                          | Kopye lyen
+Copied!                            | Kopye!
+Add to favourites                  | Met dan favori
+Saved                              | Sove
+
+=== PUBLIER UNE ANNONCE ===
+Post an ad                         | Pibliy enn lanons
+Fill in the details below          | Ranpli linformasyon anba
+Photos                             | Foto
+Title                              | Tit
+Category                           | Kategori
+Price                              | Pri
+Leave empty for "Negotiable"       | Les vid si pri a diskit
+Island                             | Zil
+District                           | Distrik
+(optional)                         | (opsyonèl)
+Description                        | Deskripsyon
+Describe your item...              | Dekriv ou artikel: eta, karakteristik, rezon pou vann...
+Publish my listing                 | Pibliy mon lanons
+Publishing...                      | Pibliy ankor...
+Title is required                  | Tit obligatwar.
+Please choose a category           | Swazir enn kategori.
+Please choose an island            | Swazir enn zil.
+
+=== CONNEXION / INSCRIPTION ===
+The Seychelles marketplace         | Marse des Sesel
+Sign in                            | Konekte
+Create account                     | Kre enn kont
+Email                              | Imel
+Password                           | Modpas
+Forgot password?                   | Bliye modpas?
+Loading...                         | Sarze...
+Sending...                         | Anvway...
+Sign in (button)                   | Konekte
+Create my account                  | Kre mon kont
+or                                 | ou
+Continue with Google               | Kontinye avek Google
+Check your email                   | Gete ou imel
+A confirmation link has been sent  | Enn lyen konfirmasyon inn anvwaye a
+Click it to activate your account  | Klik dessus pou aktiv ou kont.
+Back to login                      | Retournen koneksyon
+Email confirmed! You can sign in   | Imel konfirme! Ou kapab konekte.
+Forgot password                    | Bliye modpas
+Enter your email...                | Antre ou imel ek nou pou anvway enn lyen.
+Send link                          | Anvway lyen
+Email sent!                        | Imel anvwaye!
+A reset link has been sent to      | Enn lyen inn anvwaye a
+Incorrect email or password        | Imel ou modpas pa kòrèk.
+Password must be at least 6 chars  | Modpas bizin omwen 6 karaktèr.
+Please enter your email first      | Antre ou imel dabor.
+
+=== TABLEAU DE BORD ===
+Member since                       | Manm depi
+Edit                               | Modifye
+Cancel                             | Anile
+Save                               | Anrezistr
+Saving...                          | Anrezistr...
+Profile updated!                   | Profil mizajour!
+Display name                       | Non afishe
+Your name                          | Ou non
+WhatsApp number                    | Nimewo WhatsApp
+Island                             | Zil
+Select an island                   | Swazir enn zil
+Bio                                | Bio
+A few words about you...           | Kek mo lor ou...
+Quick links                        | Lyen rapid
+My listings                        | Mon lanons
+No listings yet                    | Nanyen lanons ankor
+Post an ad                         | Pibliy enn lanons
+Views                              | Lavwa
+Contacts                           | Kontak
+Listings                           | Lanons
+Boosted                            | Booste
+Available                          | Disponib
+Sold                               | Vande
+Delete this listing?               | Suprim sa lanons?
+This action cannot be undone       | Sa aksyon pa kapab defet.
+Cancel                             | Anile
+Delete (button)                    | Suprim
+Mark as Sold                       | Vande
+Reserve                            | Rezèrv
+Mark as Available                  | Disponib
+Reserved                           | Rezèrve
+Recently viewed                    | Ou finn get
+X people saved this                | moun inn sov sa
+Show number                        | Montre nimero
+Draft saved                        | Brouyion gard
+Clear draft                        | Efas brouyion
+Price dropped                      | Pri ine
+View                               | Vwar
+Edit                               | Modifye
+Delete (short)                     | Sup.
+
+=== MESSAGES / CONVERSATIONS ===
+All messages                       | Tou mesaz
+unread                             | pa li
+No conversations yet               | Nanyen konversasyon ankor
+Browse listings and contact...     | Get lanons ek kontakte enn vander pou koumanse.
+Write a message...                 | Ekrir enn mesaz...
+Press Enter to send                | Apiy Enter pou anvway
+View listing                       | Vwar lanons
+Conversation                       | Konversasyon
+
+=== PAGE VENDEUR ===
+Verified                           | Verifye
+Member since                       | Manm depi
+Available listings                 | Lanons disponib
+Sold                               | Vande
+No listings available              | Nanyen lanons disponib
+Reviews                            | Avis
+Leave a review                     | Les enn avis
+Be the first to leave a review     | Ou premye ki les enn avis
+No reviews yet                     | Nanyen avis ankor
+Publish my review                  | Pibliy mon avis
+Leave a review (label)             | Les enn avis
+Very bad                           | Trè move
+Bad                                | Move
+OK                                 | Korek
+Good                               | Byen
+Excellent                          | Ekselan
+Describe your experience...        | Dekriv ou eksperyans avek sa vander (opsyonèl)...
+Please choose a rating             | Swazir enn not
+You must be logged in              | Ou bizin konekte
+Submitting...                      | Anvway...
+
+=== ALERTES ===
+My alerts                          | Mon alèrt
+Get an email when a listing matches| Resevwar enn imel si enn lanons koresponn
++ New                              | + Nouvo
+Create an alert                    | Kre enn alèrt
+Alert name *                       | Non alèrt *
+e.g. iPhone 13, Car under 100k... | egz: iPhone 13, Machin mwen 100k...
+Keywords (space-separated)         | Mo-kle (separe par lespas)
+Category                           | Kategori
+Island                             | Zil
+All                                | Tou
+Max price (SCR)                    | Pri max (SCR)
+Create alert                       | Kre alèrt
+No alerts                          | Nanyen alèrt
+Create an alert to be notified...  | Kre enn alèrt pou resevwar enn imel kan enn lanons koresponn ar ou kritèr
+Created on                         | Kre le
+You can also save a search from    | Ou kapab osi sov enn resers depi
+home page                          | paz dakey
+Please give this alert a name      | Done enn non sa alèrt
+
+=== NOTIFICATIONS ===
+Notifications                      | Notifikasyon
+All caught up                      | Tou li
+unread                             | pa li
+No notifications yet               | Nanyen notifikasyon ankor.
+
+=== PARTAGE ===
+Share this listing                 | Partaz sa lanons
+WhatsApp                           | WhatsApp
+Facebook                           | Facebook
+
+=== ABONNEMENT PRO ===
+Coming soon                        | Byento disponib
+PRO subscription coming soon...    | Abonnman PRO pou disponib byento avek peman an-line.
+
+=== MENU EN-TÊTE ===
+Tenant Dossier                     | Dosye Lokatèr
+Help Centre                        | Sant Eid
+Safety Tips                        | Konsey Sekirite
+
+=== GÉNÉRAL ===
+Back to listings                   | Retourn lanons
+Negotiable                         | A diskit
+ago (time)                         | lontan
+
+=== NAVIGATION MOBILE ===
+Home                               | Dakey
+Saved                              | Sove
+Me                                 | Moi
+
+=== PAGE D'ACCUEIL (détail) ===
+Search in Seychelles...            | Rod lor Sesel...
+See all                            | Vwar tou →
+No listings match your search      | Nanyen lanons pa koresponn.
+View all listings                  | Vwar tou lanons
+Clear                              | Efas
+Map                                | Kart
+Previous                           | Presedan
+Next                               | Sivant
+Page                               | Paz
+for (search results)               | pou
+listing(s)                         | lanons
+Urgent                             | Ijans
+
+=== BANNIÈRES CARROUSEL ===
+Sell anything for free             | Vann nenpot koz gratis
+Post your ad in 2 minutes...       | Pibliy ou lanons an 2 minit — gratis, san komisyon.
+Post an ad →                       | Pibliy enn lanons →
+Advertise your business here       | Fer piblisite ou biznes isi
+Reach thousands of buyers...       | Atenn dé milye aseter Sesel sak zour.
+Contact us →                       | Kontakte nou →
+Sponsored                          | Sponsorize
+
+=== PAGE CATÉGORIE ===
+What are you looking for?          | Kisa ou rod?
+See all listings in                | Vwar tou lanons pou
+
+=== PAGE RECHERCHE ===
+Recent searches                    | Sers resan
+Clear all                          | Efas tou
+Search for                         | Sers
+Browse by category                 | Rod par kategori
+Search (button)                    | Sers
+More                               | Plis
+All categories                     | Tou kategori
+
+=== SPÉCIFICATIONS ANNONCES ===
+Brand                              | Mak
+Model                              | Modèl
+Year                               | Lane
+Mileage                            | Kilometraz
+Fuel                               | Karirans
+Gearbox                            | Boite vitès
+Condition                          | Eta
+Area (m²)                          | Siperfisi (m²)
+Bedrooms                           | Sanbra
+Bathrooms                          | Sal-debéin
+Furnished                          | Mèble
+Tenure                             | Propryet
+Contract                           | Kontrat
+Salary                             | Salèr
+Yes                                | Wi
+No                                 | Non
+Details                            | Detay
+Urgent                             | Ijans
+Call                               | Apèl
+Delivery available                 | Livrezon disponib
+views (counter)                    | lavwa
+Online now                         | Anlinn kounya
+Contact the seller directly        | Kontakte vander dirèkteman
+
+=== OPTIONS DE FILTRE ===
+Petrol                             | Petrol
+Diesel                             | Dizel
+Electric                           | Elektriktik
+Hybrid                             | Ibrid
+Manual                             | Mannyèl
+Automatic                          | Otomatik
+New                                | Nouvo
+Like new                           | Kouma nouvo
+Good                               | Bon
+Fair                               | Pasab
+House                              | Lakaz
+Apartment                          | Apartman
+Villa                              | Vila
+Land                               | Terin
+Commercial                         | Komèrsyal
+Freehold                           | Propryet lib
+Leasehold                          | Bayo
+Sailing                            | Lavwal
+Motor                              | Motèr
+Fishing                            | Lapèch
+Speedboat                          | Bato rapid
+Catamaran                          | Katamaran
+Full-time                          | Tan plin
+Part-time                          | Mitan tan
+Freelance                          | Endepandan
+Internship                         | Staz
+
+============================================================
+  FIN DU DOCUMENT — Total : ~200 expressions
+============================================================
+Instructions pour le correcteur :
+- Indiquer la clé (colonne gauche) + la correction souhaitée
+- Exemple : "Marse des Sesel" → "Marse Seselwa"
+============================================================

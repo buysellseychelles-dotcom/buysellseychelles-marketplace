@@ -1,0 +1,567 @@
+================================================================================
+  BUYSELLSEYCHELLES.COM — RÉSUMÉ COMPLET DU PROJET
+  Généré le : 19 juin 2026
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+1. DESCRIPTION DU PROJET
+────────────────────────────────────────────────────────────────────────────────
+
+Nom              : BuySellSeychelles
+URL              : https://buysellseychelles.com
+Concept          : Marketplace de petites annonces en ligne style Leboncoin,
+                   dédiée au marché des îles Seychelles.
+Public cible     : Résidents et expatriés des îles Seychelles (Mahé, Praslin,
+                   La Digue, Silhouette, autres îles).
+Marché           : Seychelles — monnaie principale SCR (Seychellois Rupee),
+                   EUR accepté pour l'immobilier, bateaux et tourisme.
+Langues          : Anglais (langue principale) + Créole seychellois / Seselwa
+                   (toggle 🇸🇨 Kreol dans le header).
+Objectif         : Plateforme locale gratuite, simple, mobile-first permettant
+                   d'acheter et vendre n'importe quoi aux Seychelles sans
+                   commission ni intermédiaire.
+
+
+────────────────────────────────────────────────────────────────────────────────
+2. STACK TECHNIQUE
+────────────────────────────────────────────────────────────────────────────────
+
+FRONTEND
+  - Framework    : Next.js 16.2.6 (App Router, Server Components + Client Components)
+  - Langage      : TypeScript 5.7.3
+  - UI           : React 19, Tailwind CSS 4, Radix UI (primitives headless)
+  - Icônes       : Lucide React
+  - Carousel     : Embla Carousel
+  - Cartes       : Leaflet + React-Leaflet (OpenStreetMap)
+  - Formulaires  : React Hook Form + Zod
+  - Graphiques   : Recharts
+  - State global : Zustand
+  - Fetch/cache  : SWR
+
+BACKEND / API
+  - Routes API   : Next.js App Router API Routes (/app/api/**)
+  - Auth         : Supabase Auth (email/password + OAuth Google, magic link)
+  - Base données : Supabase (PostgreSQL), RLS (Row Level Security) activé
+  - Storage      : Supabase Storage (bucket "listings" pour photos annonces,
+                   bucket "Avatars" pour avatars profil)
+  - Realtime     : Supabase Realtime (messages, notifications en temps réel)
+
+SERVICES TIERS
+  - Hébergement  : Vercel (déploiement automatique, edge network)
+  - Email        : Resend (noreply@buysellseychelles.com) — emails transactionnels
+                   (confirmation inscription, messages, alertes, notifications prix)
+  - Analytics    : Google Analytics 4 (ID: G-CZ9881KKHG)
+  - Monitoring   : Sentry (@sentry/nextjs) — suivi des erreurs en production
+  - Paiements    : Stripe (installé, intégration PRO/boost fonctionnelle côté code)
+  - Anti-spam    : Google reCAPTCHA v2 sur le formulaire de contact
+  - Push notifs  : Web Push VAPID (web-push library) — notifications navigateur
+  - Maps         : OpenStreetMap + Leaflet (geocodage Seychelles pré-défini)
+  - PWA          : next-pwa, manifest.json, service worker network-first
+
+INFRA / DEVOPS
+  - CI/CD        : Vercel CLI (déploiement : NODE_TLS_REJECT_UNAUTHORIZED=0 npx vercel --prod)
+  - DNS / Domaine: buysellseychelles.com configuré sur Vercel
+  - DMARC/DKIM   : Enregistrement _dmarc TXT configuré pour Resend
+  - Environnement: Variables Vercel (SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY,
+                   NEXT_PUBLIC_SUPABASE_*, RECAPTCHA_SECRET_KEY, VAPID_*, STRIPE_*)
+
+
+────────────────────────────────────────────────────────────────────────────────
+3. PAGES EXISTANTES ET URLS
+────────────────────────────────────────────────────────────────────────────────
+
+PAGES PUBLIQUES
+  /                        Page d'accueil — annonces récentes, hero, filtres, carousel
+  /listing/[id]            Page annonce (slug SEO : id-titre-kategori)
+  /seller/[id]             Profil public vendeur
+  /category/[slug]         Liste d'annonces par catégorie
+  /search                  Recherche plein texte avec filtres avancés
+  /map                     Vue carte Leaflet des annonces géolocalisées
+  /trending                Annonces tendance / populaires
+  /favorites               Annonces sauvegardées (authentifié)
+  /alerts                  Gestion des alertes de recherche (authentifié)
+  /notifications           Centre de notifications in-app (authentifié)
+
+AUTHENTIFICATION
+  /login                   Connexion / inscription (onglets Sign in / Create account)
+  /auth/callback           Callback OAuth + confirmation email (PKCE)
+  /auth/reset-password     Réinitialisation mot de passe
+
+ESPACE UTILISATEUR
+  /dashboard               Tableau de bord : profil, mes annonces, stats, favoris
+  /my-listings             Vue rapide de mes annonces
+  /post-ad                 Publier une annonce
+  /edit-listing/[id]       Modifier une annonce existante
+  /conversations           Liste de toutes les conversations
+  /conversations/[id]      Chat conversation individuelle (temps réel)
+  /messages                Alias vers conversations
+
+PAIEMENTS / ABONNEMENT
+  /subscription            Page abonnement PRO (Stripe)
+  /promote                 Promouvoir une annonce (boost)
+  /success                 Page de confirmation paiement (annonce boostée)
+  /success-pro             Confirmation abonnement PRO
+  /cancel                  Annulation paiement
+
+CONTENU / INFORMATIONS
+  /about                   À propos du site
+  /help                    Centre d'aide
+  /safety                  Conseils de sécurité
+  /advertise               Bannière publicitaire (upload image + Stripe)
+  /contact                 Formulaire de contact (reCAPTCHA + rate limit 3/h/IP)
+  /terms                   Conditions générales d'utilisation
+  /privacy                 Politique de confidentialité (DPA 2023 Seychelles)
+  /legal                   Mentions légales
+  /cgv                     Conditions générales de vente
+  /sitemap-page            Sitemap HTML navigable
+  /sitemap.xml             Sitemap XML (SEO Google)
+  /robots.txt              Robots.txt dynamique
+  /offline                 Page hors-ligne PWA
+  /tenant-profile          Profil locataire (dossier de location)
+
+ADMINISTRATION (protégé)
+  /admin                   Panel admin — modération annonces, stats globales
+  /admin/analytics         Analytiques du site (vues, annonces, utilisateurs)
+  /admin/banners           Gestion des bannières carousel d'accueil
+  /admin/reports           Signalements utilisateurs + annonces
+  /admin/verifications     Vérification d'identité utilisateurs
+
+PAGES TECHNIQUES
+  /create                  Alias création annonce (redirect)
+  /create-listing          Alias création annonce (redirect)
+  /auth/callback           Callback Supabase OAuth
+
+
+────────────────────────────────────────────────────────────────────────────────
+4. FONCTIONNALITÉS EN PLACE
+────────────────────────────────────────────────────────────────────────────────
+
+ANNONCES
+  ✓ Publication annonce : titre, description*, photos* (min 1, max 3 gratuit / 10 PRO),
+    catégorie*, île*, quartier (Mahé), prix (SCR/EUR), prix négociable, urgent,
+    livraison disponible, téléphone (optionnel + toggle masqué)
+  ✓ Modification annonce (edit-listing) avec AI quality check
+  ✓ Suppression annonce avec nettoyage automatique photos Supabase Storage
+  ✓ Expiration automatique à 60 jours (cron) — email J-7 + email jour J
+  ✓ Renouvellement annonce (bouton dashboard → remet 60 jours)
+  ✓ Marquer vendu / Réserver / Disponible depuis le dashboard
+  ✓ Marquer vendu depuis le chat (bouton ✓ Sold côté vendeur)
+  ✓ Stats par annonce : vues, CTR, favoris, messages, jours en ligne
+  ✓ Photos réordonnables par glisser-déposer (post-ad + edit-listing)
+  ✓ Compression automatique images côté client (< 5 MB après compression)
+  ✓ Annonces similaires en bas de page annonce
+
+RECHERCHE ET FILTRES
+  ✓ Recherche plein texte (titre + description)
+  ✓ Filtres : catégorie, île, quartier, fourchette de prix, tri (récent / prix / populaire)
+  ✓ Filtres adaptatifs par catégorie (voiture : carburant, boîte, km ; immo : chambres, tenure…)
+  ✓ Vue liste + Vue carte (Leaflet/OpenStreetMap)
+  ✓ Pagination
+  ✓ URL params persistants (partage de recherche)
+  ✓ Recherches récentes sauvegardées (localStorage)
+
+ALERTES DE RECHERCHE
+  ✓ Création d'alertes avec mots-clés, catégorie, île, prix max
+  ✓ Email automatique via Resend à chaque nouvelle annonce correspondante
+  ✓ Notification in-app + push navigateur
+  ✓ Bouton 🔔 Save search depuis la homepage
+  ✓ Gestion des alertes sur /alerts
+
+UTILISATEURS ET PROFIL
+  ✓ Inscription email/password + OAuth Google
+  ✓ Confirmation email (lien Supabase via Resend)
+  ✓ Réinitialisation mot de passe
+  ✓ Dashboard : avatar (upload + compression), nom, WhatsApp, île, bio
+  ✓ Barre de progression de complétion de profil
+  ✓ Badge ✓ Verified automatique (profil 100% complet)
+  ✓ Badge ⭐ PRO (abonnement Stripe)
+  ✓ Brouillon annonce sauvegardé automatiquement (localStorage)
+  ✓ Limite 3 annonces gratuites/jour (PRO = illimité)
+  ✓ Toggle numéro de téléphone (masqué/visible sur les annonces)
+  ✓ Toggle avatar (afficher/masquer sur les annonces)
+
+SYSTÈME DE MESSAGERIE
+  ✓ Messagerie en temps réel via Supabase Realtime
+  ✓ Compteur non lus dans le header et la nav mobile
+  ✓ Notifications push navigateur sur nouveau message
+  ✓ Email de notification nouveau message (Resend)
+  ✓ Liste de toutes les conversations avec aperçu dernier message
+
+NOTIFICATIONS IN-APP
+  ✓ Icône cloche (header desktop + mobile)
+  ✓ Pastille rouge avec compteur non lus
+  ✓ Page /notifications avec liste cliquable
+  ✓ Notification : baisse/hausse de prix d'une annonce sauvegardée
+  ✓ Notification : modification d'une annonce sauvegardée
+  ✓ Notification : nouvelle annonce d'un vendeur suivi
+  ✓ Notification : avis reçu
+  ✓ Notification : nouvelle alerte de recherche
+
+FAVORIS
+  ✓ Bouton ❤️ Ajouter aux favoris sur chaque annonce
+  ✓ Page /favorites avec toutes les annonces sauvegardées
+  ✓ Compteur favoris visible sur chaque annonce (dashboard vendeur)
+  ✓ Notification email/in-app quand le prix d'un favori change
+
+SYSTÈME DE SUIVI VENDEUR
+  ✓ Bouton "+ Follow" sur page annonce et page vendeur
+  ✓ Notification aux abonnés lors d'une nouvelle annonce du vendeur
+  ✓ Table seller_follows dans Supabase
+
+AVIS ET ÉVALUATIONS
+  ✓ Système d'avis 5 étoiles vendeur → acheteur et acheteur → vendeur
+  ✓ Évaluation mutuelle déclenchée par la vente (bouton ✓ Sold dans le chat)
+  ✓ Badge "✓ Verified transaction" sur les avis liés à une vente réelle
+  ✓ Note moyenne et nombre d'avis sur la page vendeur et la carte vendeur
+  ✓ Avis libres (sans transaction vérifiée) toujours possibles
+
+PROFIL VENDEUR PUBLIC
+  ✓ Page /seller/[id] : avatar, badges PRO/✓/🪪, bio, île
+  ✓ Stats : annonces actives, vendues, avis
+  ✓ Taux de réponse calculé (réponses aux messages)
+  ✓ Section avis avec étoiles, commentaires, date
+  ✓ "Member since [mois année]" + "Active today / X days ago"
+  ✓ Bouton "+ Follow" / "✓ Following"
+  ✓ Signaler un utilisateur
+
+PAGE ANNONCE DÉTAILLÉE
+  ✓ Galerie photos avec PhotoSwipe (zoom plein écran)
+  ✓ Partage : WhatsApp, Facebook, copier le lien
+  ✓ Contact vendeur (messagerie interne)
+  ✓ Contact WhatsApp direct
+  ✓ Affichage numéro de téléphone (si non masqué)
+  ✓ Bouton Signaler l'annonce (6 raisons)
+  ✓ Carte vendeur encadrée : nom, ville, Member since, Follow + View profile
+  ✓ Badge Boosted, Urgent, Prix négociable, Livraison disponible
+  ✓ Fil d'Ariane JSON-LD (SEO)
+  ✓ OpenGraph / Twitter Card pour partage réseaux sociaux
+  ✓ Prix tracker (badge baisse de prix)
+
+ADMINISTRATION
+  ✓ Panneau admin protégé (liste blanche email admin)
+  ✓ Modération annonces : validation, suppression
+  ✓ Bannissement utilisateur (ban/unban) — annonces expirées au ban
+  ✓ Blocage automatique après 5 signalements uniques (auto-ban)
+  ✓ Gestion signalements : résoudre / supprimer
+  ✓ Vérification d'identité utilisateurs
+  ✓ Gestion bannières carousel d'accueil (upload + URL)
+  ✓ Analytics : vues totales, annonces actives, nouveaux utilisateurs
+  ✓ Activation/désactivation boost manuellement
+
+SÉCURITÉ ET ANTI-ABUS
+  ✓ RLS Supabase sur toutes les tables (Row Level Security)
+  ✓ Rate limiting sur le formulaire de contact (3/h/IP)
+  ✓ Google reCAPTCHA v2 sur le formulaire de contact
+  ✓ Blocage automatique après 5 signalements distincts
+  ✓ Limite 3 annonces gratuites/jour avec enforcement DB (trigger PostgreSQL)
+  ✓ Taille max upload photo : 5 MB (après compression), 30 MB sur l'original
+
+SEO ET PERFORMANCE
+  ✓ URLs SEO-friendly (slug : /listing/uuid-titre-categorie)
+  ✓ Redirection 308 permanent pour les anciens liens UUID
+  ✓ Metadata dynamique (title, description, OG, Twitter Card) par annonce
+  ✓ Sitemap XML dynamique
+  ✓ JSON-LD Schema.org (Product + BreadcrumbList) sur les annonces
+  ✓ robots.txt dynamique
+  ✓ Google Analytics 4
+  ✓ Sentry error monitoring
+
+PWA
+  ✓ manifest.json (installable sur Android/iOS)
+  ✓ Service Worker network-first (cache offline)
+  ✓ Page /offline branded
+  ✓ Prompt d'installation Android (bannière native)
+  ✓ Instructions iOS (Share → Add to Home Screen)
+  ✓ Notifications push VAPID (messages, avis, alertes)
+
+BOOST / PROMOTION
+  ✓ Boost annonce via Stripe (intégration fonctionnelle)
+  ✓ Cron de nettoyage des boosts expirés
+  ✓ Badge 🚀 Boosted sur les annonces promues
+  ✓ Tri boost dans l'algorithme de ranking
+
+CONTENU ET LÉGAL
+  ✓ Pages légales : Terms, Privacy, Legal, CGV
+  ✓ Loi applicable : Data Protection Act 2023 (Seychelles) + Electronic Transactions Act 2001
+  ✓ Cookie banner (accept / decline)
+  ✓ Footer avec liens légaux
+  ✓ Pages informatives : About, Help, Safety Tips
+  ✓ Profil locataire (/tenant-profile) pour dossier de location
+
+PAGES STATIQUES INFORMATIVES
+  ✓ /about — présentation du service
+  ✓ /help — FAQ et aide utilisateur
+  ✓ /safety — conseils de sécurité pour les transactions
+  ✓ /advertise — réserver une bannière publicitaire (Stripe)
+
+
+────────────────────────────────────────────────────────────────────────────────
+5. INTÉGRATIONS DÉTAILLÉES
+────────────────────────────────────────────────────────────────────────────────
+
+SUPABASE
+  Rôle    : Auth + Base de données PostgreSQL + Storage + Realtime
+  Tables  : listings, profiles, listing_images, conversations, messages,
+            favorites, reviews, reports, notifications, search_alerts,
+            push_subscriptions, seller_follows, user_purchases,
+            listing_views, listing_clicks, banners
+  Auth    : Email/password, OAuth Google, PKCE, magic link
+  Storage : bucket "listings" (photos annonces), bucket "Avatars" (avatars)
+  RLS     : Activé sur toutes les tables sensibles
+  Realtime: Canal Supabase sur messages + notifications (unread count live)
+
+RESEND (EMAIL TRANSACTIONNEL)
+  Sender  : noreply@buysellseychelles.com (domaine vérifié + DKIM + DMARC)
+  Emails envoyés :
+    - Confirmation d'inscription (Auth)
+    - Nouveau message reçu
+    - Baisse/hausse de prix sur favori
+    - Nouvelle annonce correspondant à une alerte
+    - Modification d'une annonce sauvegardée
+    - Signalement reçu (admin)
+    - Expiration annonce (J-7 et jour J)
+  Admin   : reportbuysellseychelles@gmail.com (signalements + auto-bans)
+
+STRIPE
+  Produits : Abonnement PRO (mensuel), Boost annonce (one-time),
+             Pack photos 10 (one-time)
+  Webhook  : /api/stripe/webhook (fulfilled en Vercel)
+  Status   : Intégration complète — paiements DPO Pay prévus pour le marché
+             local Seychelles dès ouverture d'un compte business
+
+GOOGLE reCAPTCHA v2
+  Page    : /contact (formulaire de contact)
+  Clé site: 6LdbhSYtAAAAANm-ccvO82W_5r1JnGDO6QUn4dFB
+  Vérif   : côté serveur dans /api/contact (RECAPTCHA_SECRET_KEY)
+
+WEB PUSH VAPID
+  Library : web-push (Node.js)
+  Scope   : Messages, avis, alertes, nouvelles annonces (abonnés vendeur)
+  Table   : push_subscriptions (endpoint, keys p256dh + auth)
+  Init    : components/push-init.tsx (enregistrement SW + permission)
+
+GOOGLE ANALYTICS 4
+  ID      : G-CZ9881KKHG
+  Chargé  : next/script afterInteractive dans app/layout.tsx
+
+SENTRY
+  Package : @sentry/nextjs v10
+  Config  : sentry.client.config.ts + sentry.server.config.ts
+  Auth    : Clé DSN à configurer dans les variables Vercel
+
+OPENSTREETMAP + LEAFLET
+  Vue     : /map — carte interactive des annonces
+  Geocode : Coordonnées pré-définies par île (Mahé, Praslin, La Digue…)
+  Marker  : Popup image + prix + lien vers annonce
+
+VERCEL ANALYTICS
+  Package : @vercel/analytics
+  Chargé  : dans app/layout.tsx
+
+
+────────────────────────────────────────────────────────────────────────────────
+6. FONCTIONNALITÉS EN COURS / PARTIELLES
+────────────────────────────────────────────────────────────────────────────────
+
+  ⏳ DPO Pay : intégration prévue comme alternative à Stripe pour le marché
+     seychellois — en attente de l'ouverture d'un compte business local
+  ⏳ Sentry DSN : clé d'authentification à configurer dans les variables Vercel
+     pour activer la remontée d'erreurs en production
+  ⏳ SITE_URL Vercel : variable NEXT_PUBLIC_SITE_URL déjà mise à jour sur
+     https://buysellseychelles.com — à vérifier si toujours correcte
+  ⏳ Notification email abonnement vendeur : la route /api/notify/new-listing
+     envoie les notifications in-app mais pas encore d'email aux abonnés
+  ⏳ Page /trending : affiche des annonces mais l'algorithme de ranking peut
+     être affiné (crons de recompute-ranking en place)
+  ⏳ Vérification identité admin : workflow partiel sur /admin/verifications
+
+
+────────────────────────────────────────────────────────────────────────────────
+7. STYLE VISUEL ET DESIGN SYSTEM
+────────────────────────────────────────────────────────────────────────────────
+
+IDENTITÉ VISUELLE
+  Inspiration   : Drapeau des Seychelles (bleu, jaune, rouge, blanc, vert)
+  Ambiance      : Moderne, mobile-first, sobre — noir/blanc pour le contenu,
+                  couleurs Seychelles pour les accents et headers
+
+PALETTE DE COULEURS
+  Bleu principal : #003F87  (boutons CTA, header, liens, badges)
+  Jaune          : #FCD116  (accent gradient)
+  Rouge          : #BE0027  (accent gradient, badges urgent)
+  Vert           : #007A3D  (accent gradient, indicateurs succès)
+  Blanc          : #FFFFFF  (fonds cartes, contenu)
+  Noir           : #000000  (texte principal, anciens boutons)
+  Gris clair     : #F3F4F6 (fonds secondaires, bg-gray-100)
+  Footer sombre  : #1E2028
+
+GRADIENTS
+  Logo / barre header   : linear-gradient(90deg, #003F87 0%, #003F87 15%,
+                          #FCD116 42%, #BE0027 68%, #007A3D 100%)
+  Pages hero (About…)   : linear-gradient(135deg, #003F87 0%, #003F87 22%,
+                          #FCD116 44%, #BE0027 66%, #007A3D 88%, #007A3D 100%)
+  Dashboard / Vendeur   : linear-gradient(135deg, #003F87 0%, #003F87 40%,
+                          #007A3D 100%)
+
+TYPOGRAPHIE
+  Police         : Système (sans-serif natif OS — -apple-system, BlinkMacSystemFont,
+                   Segoe UI, Roboto…) via Tailwind par défaut
+  Tailles clés   : text-sm (14px) pour le corps des fiches, text-xs (12px) pour
+                   les métadonnées, text-xl / text-2xl pour les titres de page
+
+LAYOUT
+  Container desktop    : max-w-7xl (1280px)
+  Pages contenu        : max-w-3xl (768px)
+  Pages annonce        : max-w-xl (576px) côté form, sidebar desktop
+  Header desktop       : h-16 (64px), barre de recherche intégrée
+  Header mobile        : h-14 (56px)
+  Nav mobile           : 60px fixe en bas (safe-area-inset-bottom géré)
+  Sticky mobile        : top-14, desktop : top-16
+  Clearance nav mobile : pb-24 md:pb-0 sur les pages principales
+
+COMPOSANTS UI RÉCURRENTS
+  Cartes annonces    : bg-white, border border-gray-100, rounded-2xl, shadow-sm
+  Boutons CTA        : bg-[#003F87] text-white rounded-xl py-3 font-semibold
+  Boutons secondaires: border border-gray-200 rounded-xl bg-white
+  Badges             : rounded-full px-2 py-0.5 text-[10px] font-bold
+  Badges PRO         : bg-yellow-400 text-black
+  Badges Verified    : bg-blue-500 text-white
+  Badges Urgent      : bg-red-600 text-white
+  Badges Boosted     : gradient Seychelles
+  Images annonces    : aspect-[4/3] (ratio paysage)
+  Avatar utilisateur : w-16 h-16 rounded-full
+
+BOUTONS PRIMAIRES (depuis design update)
+  Fond   : bg-[#003F87] (bleu Seychelles — plus jamais bg-black pour les CTA)
+  Texte  : text-white font-semibold
+  Forme  : rounded-xl (pas rounded-full pour les CTA principaux)
+
+
+────────────────────────────────────────────────────────────────────────────────
+8. STRUCTURE DES ROUTES API
+────────────────────────────────────────────────────────────────────────────────
+
+ANNONCES
+  POST   /api/listings/delete        Supprimer une annonce + photos
+  POST   /api/listings/renew         Renouveler une annonce (60 jours)
+
+NOTIFICATIONS
+  POST   /api/notify/alerts          Alertes de recherche (nouvelle annonce)
+  POST   /api/notify/listing-update  Annonce modifiée (favoris)
+  POST   /api/notify/message         Nouveau message reçu
+  POST   /api/notify/new-listing     Nouvelle annonce (abonnés vendeur)
+  POST   /api/notify/price-drop      Changement de prix (favoris)
+  POST   /api/notify/transaction     Vente confirmée (évaluation mutuelle)
+
+PUSH
+  POST   /api/push/subscribe         Enregistrer abonnement push VAPID
+  POST   /api/push/new-listing       Push : nouvelle annonce (abonnés)
+
+VENDEUR
+  GET/POST /api/seller/follow        Vérifier/toggle suivi vendeur
+  GET    /api/seller/response-stats  Taux de réponse vendeur
+
+ALERTES
+  GET/POST/DELETE /api/alerts        CRUD alertes de recherche
+
+AVIS
+  POST   /api/reviews                Publier un avis
+
+SIGNALEMENTS
+  POST   /api/report                 Signaler annonce / utilisateur
+
+CONTACT
+  POST   /api/contact                Formulaire de contact (reCAPTCHA + rate limit)
+
+STORAGE
+  POST   /api/storage/upload         Upload image (check 5 MB)
+
+STRIPE
+  POST   /api/stripe/checkout        Créer session de paiement
+  POST   /api/stripe/webhook         Recevoir événements Stripe
+  POST   /api/stripe/boost           Booster une annonce
+  POST   /api/stripe/subscription    Abonnement PRO
+
+IA (OpenAI)
+  POST   /api/ai/optimize            Optimiser le titre d'une annonce
+  POST   /api/ai/price-suggest       Suggérer un prix
+  POST   /api/ai/quality             Score qualité d'une annonce
+
+TRACKING
+  POST   /api/track/view             Incrémenter les vues
+  POST   /api/track/click            Incrémenter les clics contact
+  POST   /api/track/listing          Tracking listing
+
+ADMIN
+  POST   /api/admin/delete-listing   Supprimer annonce (admin)
+  POST   /api/admin/resolve-report   Résoudre signalement
+  POST   /api/admin/verify           Vérifier identité utilisateur
+
+CRONS (déclenchés par Vercel Cron)
+  GET    /api/cron/expire-listings   Expirer les annonces + photos orphelines
+  GET    /api/cron/rank              Recalculer le ranking
+  GET    /api/cron/recompute-ranking Recompute ranking complet
+  GET    /api/cron/boost-*           Gestion boosts (expire, pulse, cleanup…)
+
+VUES
+  POST   /api/views/increment        Incrémenter compteur vues annonce
+
+AUTH
+  POST   /api/auth/welcome           Email de bienvenue après inscription
+
+IDENTITÉ
+  POST   /api/verify-identity        Vérification KYC utilisateur
+
+DISPUTE
+  POST   /api/dispute                Signalement de litige
+
+
+────────────────────────────────────────────────────────────────────────────────
+9. BASE DE DONNÉES — TABLES PRINCIPALES
+────────────────────────────────────────────────────────────────────────────────
+
+  listings           id, title, description, price, currency, location, category,
+                     user_id, status, boosted, boost_expires_at, expires_at,
+                     phone, phone_hidden, urgent, delivery, price_negotiable,
+                     make, model, year, mileage, fuel_type, gearbox, condition,
+                     property_type, bedrooms, bathrooms, area_sqm, furnished,
+                     tenure, contract_type, salary, boat_type, buyer_id, sold_at,
+                     renewal_email_sent, final_notice_sent, created_at
+
+  profiles           id, full_name, bio, island, whatsapp, avatar_url,
+                     is_pro, verified, id_verified, show_avatar_in_listings,
+                     phone_hidden, last_active_at, created_at
+
+  listing_images     id, listing_id, image_url
+
+  conversations      id, listing_id, user_id (acheteur), seller_id
+
+  messages           id, conversation_id, sender_id, body, read, created_at
+
+  favorites          id, user_id, listing_id (UNIQUE user_id+listing_id)
+
+  reviews            id, reviewer_id, seller_id, listing_id, rating, comment,
+                     reviewer_role, verified_transaction, created_at
+                     (UNIQUE reviewer_id+seller_id+listing_id)
+
+  notifications      id, user_id, title, body, link, read, created_at
+
+  search_alerts      id, user_id, label, keywords, category, island, max_price,
+                     created_at
+
+  push_subscriptions id, user_id, endpoint, p256dh, auth, created_at
+
+  seller_follows     id, follower_id, seller_id (UNIQUE follower+seller)
+
+  reports            id, listing_id, user_id (reporter), reason,
+                     reported_user_id, resolved, created_at
+
+  user_purchases     id, user_id, product_type, expires_at
+
+  banners            id, image_url, link, active, position, created_at
+
+
+================================================================================
+  FIN DU DOCUMENT — buysellseychelles.com — 19 juin 2026
+================================================================================

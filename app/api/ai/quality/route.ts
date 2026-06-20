@@ -18,16 +18,16 @@ export async function POST(req: Request) {
   if (price > 0) score += 10
 
   if (title.toLowerCase().includes('urgent')) score += 10
-  if (title.toLowerCase().includes('neuf')) score += 10
+  if (title.toLowerCase().includes('new')) score += 10
 
   if (score > 100) score = 100
 
   return Response.json({
     quality_score: score,
     tips: [
-      score < 70 ? "Ajoute plus de détails" : "Bonne annonce",
-      "Ajoute des photos pour +30% de ventes",
-      "Utilise 'urgent' pour booster la visibilité"
+      score < 70 ? "Add more details" : "Good listing",
+      "Add photos for +30% more sales",
+      "Use 'urgent' to boost visibility"
     ]
   })
 }

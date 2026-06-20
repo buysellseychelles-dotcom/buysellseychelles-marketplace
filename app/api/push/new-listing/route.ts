@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     const payload = JSON.stringify({
-      title: 'Nouvelle annonce',
+      title: 'New listing',
       body: title,
     })
 

@@ -134,7 +134,7 @@ export function CreateListingForm() {
           description={description}
           price={Number(price || 0)}
           onResult={(data) => {
-            alert(`🔥 Score qualité: ${data.quality_score}/100`)
+            alert(`🔥 Quality score: ${data.quality_score}/100`)
           }}
         />
 

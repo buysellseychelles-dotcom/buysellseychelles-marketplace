@@ -18,7 +18,7 @@ export default function ProSubscription() {
       onClick={subscribe}
       className="bg-purple-600 text-white px-4 py-2 rounded"
     >
-      ⭐ Passer PRO — 9,99€/mois
+      ⭐ Go PRO — 230 SCR/month
     </button>
   )
 }

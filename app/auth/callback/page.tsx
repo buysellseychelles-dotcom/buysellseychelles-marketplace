@@ -23,11 +23,6 @@ export default function AuthCallback() {
       if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
         setHasSession(true)
         setStatus('success')
-        fetch('/api/auth/welcome', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: session.user.id }),
-        }).catch(() => {})
       }
     })
 
@@ -39,11 +34,6 @@ export default function AuthCallback() {
         // On montre toujours la page de bienvenue
         if (!error && data.session) {
           setHasSession(true)
-          fetch('/api/auth/welcome', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: data.session.user.id }),
-          }).catch(() => {})
         }
         setStatus('success')
         return
@@ -141,12 +131,7 @@ export default function AuthCallback() {
                 <Link href="/"
                   className="block w-full text-center text-white font-semibold py-3.5 rounded-xl text-sm hover:opacity-90 transition-opacity"
                   style={{ backgroundColor: '#003F87' }}>
-                  🏝️ Browse listings
-                </Link>
-                <Link href="/post-ad"
-                  className="block w-full text-center font-semibold py-3.5 rounded-xl border-2 text-sm hover:bg-gray-50 transition-colors"
-                  style={{ borderColor: '#003F87', color: '#003F87' }}>
-                  + Post my first ad
+                  🏝️ Go to the marketplace →
                 </Link>
               </>
             ) : (

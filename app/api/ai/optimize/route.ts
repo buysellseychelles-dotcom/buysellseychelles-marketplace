@@ -11,9 +11,9 @@ export async function POST(req: Request) {
   const { title, description, price } = body
 
   // 👉 VERSION SIMPLE (sans OpenAI pour éviter complexité)
-  const optimizedTitle = `🔥 ${title} - Bonne affaire`
+  const optimizedTitle = `🔥 ${title} - Great deal`
   const optimizedDescription =
-    `${description}\n\n✔ Produit vérifié\n✔ Prix négociable\n✔ Disponible immédiatement`
+    `${description}\n\n✔ Verified product\n✔ Price negotiable\n✔ Available immediately`
 
   const suggestedPrice = Math.round(price * 0.95)
 

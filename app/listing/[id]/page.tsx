@@ -5,8 +5,10 @@ import SafeImage from '@/components/safe-image'
 import BackButton from '@/components/back-button'
 import { CATEGORY_LABELS } from '@/lib/i18n'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { Metadata } from 'next'
+import { SITE_URL } from '@/lib/site'
+import { buildListingSlug, extractListingId } from '@/lib/slug'
 import BoostButton from '@/components/boost-button'
 import { RecentlyViewedTracker } from '@/components/recently-viewed'
 import PhoneReveal from '@/components/phone-reveal'
@@ -18,6 +20,8 @@ import ReportButton from '@/components/report-button'
 import PhotoSwipe from '@/components/photo-swipe'
 import ShareButtons from '@/components/share-buttons'
 import SellerResponseBadge from '@/components/seller-response-badge'
+import FollowSellerButton from '@/components/follow-seller-button'
+import ReviewStars from '@/components/review-stars'
 import { formatPrice } from '@/lib/utils'
 import { t, tOption, type Lang } from '@/lib/i18n'
 
@@ -25,14 +29,19 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://v0-buysellseychelles-marketplace-ma.vercel.app'
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params
+  const { id: param } = await params
+  const id = extractListingId(param)
+  if (!id) return { title: 'Listing not found – BuySellSeychelles' }
+
   const { data: listing } = await supabase
     .from('listings')
-    .select('title, description, price, location, category')
+    .select('id, title, description, price, location, category, make, model, year')
     .eq('id', id)
     .single()
 
@@ -50,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     ? `${listing.description.slice(0, 150)}...`
     : `${listing.title} – ${price} – ${listing.location ?? 'Seychelles'}`
 
-  const url = `${SITE_URL}/listing/${id}`
+  const url = `${SITE_URL}/listing/${buildListingSlug(listing)}`
 
   return {
     title: `${listing.title} – ${price} | BuySellSeychelles`,
@@ -75,7 +84,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+  const { id: param } = await params
+  const id = extractListingId(param)
+  if (!id) return notFound()
+
   const cookieStore = await cookies()
   const lang = (cookieStore.get('bss_lang')?.value ?? 'en') as Lang
 
@@ -87,11 +99,27 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   if (!listing) return notFound()
 
-  const { data: profile } = await supabase
+  // URLs lisibles : si l'URL demandée ne correspond pas au slug canonique
+  // (ancien lien en UUID nu, ou titre modifié), on redirige en 308 permanent
+  // pour préserver le SEO et n'avoir qu'une seule URL indexée par annonce.
+  const canonicalSlug = buildListingSlug(listing)
+  if (param !== canonicalSlug) {
+    permanentRedirect(`/listing/${canonicalSlug}`)
+  }
+
+  const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('full_name, island, verified, is_pro, avatar_url, whatsapp, online')
+    .select('full_name, island, verified, is_pro, avatar_url, whatsapp, online, show_avatar_in_listings, phone_hidden, created_at, last_active_at')
     .eq('id', listing.user_id)
     .maybeSingle()
+
+  // Display name: use full_name (the "Display name" field), fallback to email prefix only if empty
+  let sellerDisplayName = profile?.full_name?.trim() || null
+  if (!sellerDisplayName && listing.user_id) {
+    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(listing.user_id)
+    const email = authData?.user?.email
+    if (email) sellerDisplayName = email.split('@')[0]
+  }
 
   const { data: images } = await supabase
     .from('listing_images')
@@ -102,6 +130,16 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .from('favorites')
     .select('id', { count: 'exact', head: true })
     .eq('listing_id', id)
+
+  // Note moyenne du vendeur (affichée sur la carte profil)
+  const { data: sellerReviews } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('seller_id', listing.user_id)
+  const sellerReviewCount = sellerReviews?.length ?? 0
+  const sellerAvgRating = sellerReviewCount > 0
+    ? sellerReviews!.reduce((s: number, r: any) => s + r.rating, 0) / sellerReviewCount
+    : null
 
   const { data: similar } = await supabase
     .from('listings')
@@ -125,10 +163,12 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     ? `https://wa.me/${sellerWhatsapp.replace(/\D/g, '')}?text=${whatsappMessage}`
     : null
 
-  const shareUrl = `${SITE_URL}/listing/${listing.id}`
+  const shareUrl = `${SITE_URL}/listing/${canonicalSlug}`
   const priceLabel = formatPrice(listing.price, listing.currency)
-  const contactPhone = listing.phone || profile?.whatsapp || null
+  const contactPhone = (listing.phone_hidden || profile?.phone_hidden) ? null : (listing.phone || profile?.whatsapp || null)
   const cleanPhone = contactPhone ? contactPhone.replace(/\D/g, '') : null
+
+  const categoryLabel = CATEGORY_LABELS?.[listing.category]?.en ?? listing.category
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -136,14 +176,28 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     name: listing.title,
     description: listing.description ?? undefined,
     image: images?.map((img: any) => img.image_url) ?? [],
+    category: categoryLabel,
     offers: {
       '@type': 'Offer',
-      priceCurrency: 'SCR',
-      price: listing.price ?? '0',
-      availability: 'https://schema.org/InStock',
-      url: `${SITE_URL}/listing/${listing.id}`,
-      seller: { '@type': 'Person', name: listing.location ?? 'Seychelles' },
+      priceCurrency: listing.currency || 'SCR',
+      price: listing.price != null ? Number(listing.price) : 0,
+      availability: listing.status === 'sold'
+        ? 'https://schema.org/OutOfStock'
+        : 'https://schema.org/InStock',
+      url: shareUrl,
+      seller: { '@type': 'Person', name: sellerDisplayName ?? listing.location ?? 'Seychelles' },
     },
+  }
+
+  // Fil d'Ariane : Accueil > Catégorie > Annonce (rich result Google).
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      ...(listing.category ? [{ '@type': 'ListItem', position: 2, name: categoryLabel, item: `${SITE_URL}/category/${listing.category}` }] : []),
+      { '@type': 'ListItem', position: listing.category ? 3 : 2, name: listing.title, item: shareUrl },
+    ],
   }
 
   /* ── Bloc réutilisable : spécifications ── */
@@ -176,31 +230,62 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   }
 
   /* ── Composants réutilisables ── */
+  const sellerMemberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString('en', { month: 'long', year: 'numeric' })
+    : null
+  const sellerLastActiveDays = profile?.last_active_at
+    ? Math.floor((Date.now() - new Date(profile.last_active_at).getTime()) / 86400000)
+    : null
+  const sellerLastActiveLabel = sellerLastActiveDays === null ? null
+    : sellerLastActiveDays === 0 ? 'Active today'
+    : sellerLastActiveDays === 1 ? 'Active yesterday'
+    : `Active ${sellerLastActiveDays} days ago`
+
   const SellerCard = (
-    <Link href={`/seller/${listing.user_id}`}
-      className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 hover:bg-gray-100 transition-colors">
-      <div className="w-10 h-10 rounded-full bg-black overflow-hidden flex items-center justify-center text-white font-bold text-sm shrink-0 relative">
-        {profile?.avatar_url
-          ? <Image src={profile.avatar_url} alt="" fill className="object-cover" unoptimized />
-          : (profile?.full_name || '?')[0]?.toUpperCase()
-        }
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <p className="text-sm font-semibold text-gray-800">{profile?.full_name || t(lang, 'seller')}</p>
-          {profile?.is_pro && <span className="bg-yellow-400 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">⭐ PRO</span>}
-          {profile?.verified && <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">✓</span>}
+    <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-sm">
+      {/* Seller info */}
+      <div className="p-4 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-black overflow-hidden flex items-center justify-center text-white font-bold shrink-0 relative">
+          {profile?.avatar_url && profile?.show_avatar_in_listings !== false
+            ? <Image src={profile.avatar_url} alt="" fill className="object-cover" unoptimized />
+            : (sellerDisplayName || '?')[0]?.toUpperCase()
+          }
         </div>
-        {profile?.island && <p className="text-xs text-gray-500">📍 {profile.island}</p>}
-        {profile?.online && (
-          <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-pulse" />
-            {t(lang, 'online_now')}
-          </p>
-        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-sm font-semibold text-gray-800">{sellerDisplayName || t(lang, 'seller')}</p>
+            {profile?.is_pro && <span className="bg-yellow-400 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">⭐ PRO</span>}
+            {profile?.verified && <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">✓</span>}
+          </div>
+          {sellerAvgRating !== null && (
+            <Link href={`/seller/${listing.user_id}`} className="flex items-center gap-1.5 mt-0.5 w-fit">
+              <ReviewStars rating={sellerAvgRating} size="sm" />
+              <span className="text-xs text-gray-500">{sellerAvgRating.toFixed(1)} ({sellerReviewCount})</span>
+            </Link>
+          )}
+          {profile?.island && <p className="text-xs text-gray-500 mt-0.5">📍 {profile.island}</p>}
+          {sellerMemberSince && <p className="text-xs text-gray-400 mt-0.5">Member since {sellerMemberSince}</p>}
+          {sellerLastActiveLabel && (
+            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+              <span className={`w-1.5 h-1.5 rounded-full inline-block ${sellerLastActiveDays === 0 ? 'bg-green-500' : 'bg-gray-300'}`} />
+              {sellerLastActiveLabel}
+            </p>
+          )}
+        </div>
       </div>
-      <span className="text-xs text-gray-400">{t(lang, 'see_profile')}</span>
-    </Link>
+      {/* Action buttons */}
+      {listing.user_id && (
+        <div className="border-t border-gray-100 flex divide-x divide-gray-100">
+          <FollowSellerButton sellerId={listing.user_id} variant="light" />
+          <Link
+            href={`/seller/${listing.user_id}`}
+            className="flex-1 text-center text-sm font-semibold py-3 text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            {t(lang, 'see_profile')} →
+          </Link>
+        </div>
+      )}
+    </div>
   )
 
   const ContactBlock = (
@@ -212,7 +297,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         </div>
       )}
       {listing.user_id && <ContactButton listingId={listing.id} sellerId={listing.user_id} />}
-      <FavoriteButton listingId={listing.id} />
+      <FavoriteButton listingId={listing.id} initialCount={favCount ?? 0} viewsCount={listing.views_count ?? 0} />
       {!contactPhone && whatsappLink && (
         <a href={whatsappLink} target="_blank"
           onClick={() => fetch('/api/track/click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: listing.id }) })}
@@ -236,9 +321,10 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   )
 
   return (
-    <div className="pb-24 md:pb-0">
+    <div className="pb-4 md:pb-0">
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <script dangerouslySetInnerHTML={{ __html: `fetch('/api/track/view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listingId:'${listing.id}'})})` }} />
 
       {/* ── Layout desktop 2 colonnes ── */}
@@ -259,9 +345,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             {/* Badges - mobile only (desktop : dans sidebar) */}
             <div className="lg:hidden">{BadgesRow}</div>
 
-            {/* Views/favs — mobile */}
+            {/* Favs — mobile */}
             <div className="flex items-center gap-3 text-xs text-gray-400 lg:hidden">
-              {listing.views_count > 0 && <span>👁 {listing.views_count} {t(lang, 'views_label')}</span>}
               {favCount && favCount > 0 ? <span>❤️ {favCount} {t(lang, 'saved_label')}</span> : null}
             </div>
 
@@ -309,7 +394,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
             {/* Boost — mobile only */}
             <div className="border-t border-gray-100 pt-4 lg:hidden">
-              <BoostButton listingId={listing.id} />
+              <BoostButton listingId={listing.id} ownerId={listing.user_id} />
             </div>
 
             {/* Share — mobile only */}
@@ -330,7 +415,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                   {similar.map((s: any) => {
                     const img = s.listing_images?.[0]?.image_url
                     return (
-                      <Link key={s.id} href={`/listing/${s.id}`}
+                      <Link key={s.id} href={listingHref(s)}
                         className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100 hover:shadow-sm transition-shadow">
                         <div className="relative w-full aspect-square bg-gray-100">
                           {img
@@ -369,7 +454,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               <h1 className="text-lg font-bold text-gray-900 leading-snug">{listing.title}</h1>
               <p className="text-3xl font-extrabold mt-2" style={{ color: '#003F87' }}>{priceLabel}</p>
               <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                {listing.views_count > 0 && <span>👁 {listing.views_count} {t(lang, 'views_label')}</span>}
                 {favCount && favCount > 0 ? <span>❤️ {favCount} {t(lang, 'saved_label')}</span> : null}
               </div>
               <div className="mt-3">{BadgesRow}</div>
@@ -392,7 +476,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
             {/* Boost */}
             <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-              <BoostButton listingId={listing.id} />
+              <BoostButton listingId={listing.id} ownerId={listing.user_id} />
             </div>
 
             {/* Share */}

@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // ── Routes protégées (authentification requise) ─────────────────────────────
-const PROTECTED_ROUTES = [
-  '/post-ad',
-  '/dashboard',
-  '/my-listings',
-  '/favorites',
-  '/messages',
-  '/conversations',
-  '/notifications',
-]
+// Protection gérée côté client (Supabase session en localStorage, pas cookies)
+const PROTECTED_ROUTES: string[] = []
 
 const ADMIN_ROUTES = ['/admin']
 

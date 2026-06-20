@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { deleteListingPhotos } from '@/lib/storage-cleanup'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,6 +47,9 @@ export async function POST(req: Request) {
     if (listing.user_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    // 🧹 supprime d'abord les photos du Storage (évite les fichiers orphelins)
+    await deleteListingPhotos(supabase, [id])
 
     // 🗑 delete sécurisé
     const { error } = await supabase

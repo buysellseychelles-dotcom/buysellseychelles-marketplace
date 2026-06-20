@@ -75,9 +75,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <span className="text-sm text-muted-foreground">
+                <Link
+                  href="/advertise"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   Advertise With Us
-                </span>
+                </Link>
               </li>
               <li>
                 <span className="text-sm text-muted-foreground">
