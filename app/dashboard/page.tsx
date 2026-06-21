@@ -363,8 +363,8 @@ export default function DashboardPage() {
           {[
             { label: t(lang, 'listings_count'), value: listings.length },
             { label: t(lang, 'views'), value: totalViews },
-            { label: 'Saves', value: totalFavs },
-            { label: 'Messages', value: unreadMsgsDash },
+            { label: lang === 'kr' ? 'Anrezistre' : 'Saves', value: totalFavs },
+            { label: t(lang, 'messages'), value: unreadMsgsDash },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-xl p-2 text-center shadow-sm">
               <p className="text-lg font-bold text-gray-900">{s.value}</p>
@@ -507,7 +507,7 @@ export default function DashboardPage() {
           { href: '/conversations', icon: '💬', label: t(lang, 'messages') },
           { href: '/favorites', icon: '❤️', label: t(lang, 'favorites') },
           { href: '/notifications', icon: '🔔', label: t(lang, 'notifications') },
-          { href: '/tenant-profile', icon: '🏠', label: 'My Dossier' },
+          { href: '/tenant-profile', icon: '🏠', label: lang === 'kr' ? 'Mon dosye' : 'My Dossier' },
         ].map(item => (
           <Link key={item.href} href={item.href}
             className="bg-white border border-gray-100 rounded-xl p-3 text-center hover:shadow-sm transition-shadow">

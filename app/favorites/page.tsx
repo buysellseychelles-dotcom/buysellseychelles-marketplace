@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
+import { useLang } from '@/lib/lang-context'
 
 type Fav = {
   listing_id: string
@@ -19,6 +20,7 @@ type Fav = {
 
 export default function FavoritesPage() {
   const router = useRouter()
+  const { lang } = useLang()
   const [favs, setFavs] = useState<Fav[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -64,7 +66,7 @@ export default function FavoritesPage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
           Back
         </button>
-        <h1 className="text-xl font-bold">❤️ My Favourites</h1>
+        <h1 className="text-xl font-bold">❤️ {lang === 'kr' ? 'Favori' : 'My Favourites'}</h1>
         <p className="text-gray-400 text-sm mt-0.5">{favs.length} saved listing{favs.length !== 1 ? 's' : ''}</p>
       </div>
 

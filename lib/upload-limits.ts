@@ -20,7 +20,7 @@ export function fileExceedsRaw(file: File, lang: Lang = 'en'): string | null {
   if (file.size <= MAX_ORIGINAL_BYTES) return null
   const mb = (file.size / (1024 * 1024)).toFixed(1)
   return lang === 'kr'
-    ? `Foto-la tro gro (${mb} MB). Maksimòm ${MAX_ORIGINAL_MB} MB.`
+    ? `Portre-la tro gro (${mb} MB). Maksimòm ${MAX_ORIGINAL_MB} MB.`
     : `Image too large (${mb} MB). Maximum ${MAX_ORIGINAL_MB} MB.`
 }
 
@@ -32,7 +32,7 @@ export function fileTooLarge(file: File, lang: Lang = 'en'): string | null {
   if (file.size <= MAX_UPLOAD_BYTES) return null
   const mb = (file.size / (1024 * 1024)).toFixed(1)
   return lang === 'kr'
-    ? `Foto-la tro gro (${mb} MB). Maksimòm ${MAX_UPLOAD_MB} MB par foto.`
+    ? `Portre-la tro gro (${mb} MB). Maksimòm ${MAX_UPLOAD_MB} MB par portre.`
     : `Image too large (${mb} MB). Maximum ${MAX_UPLOAD_MB} MB per photo.`
 }
 

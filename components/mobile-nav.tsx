@@ -76,54 +76,64 @@ export default function MobileNav() {
   }, [])
 
   useEffect(() => {
-    const loadCounts = async (userId: string) => {
-      const { data: myConvs } = await supabase.from('conversations')
+    // Un seul canal Realtime à la fois. On garde une référence pour pouvoir le
+    // retirer avant d'en recréer un : sans ça, chaque SIGNED_IN (refresh de
+    // token, retour d'onglet, navigation…) recréait 'unread-nav' et rajoutait
+    // des callbacks .on(postgres_changes) sur un canal DÉJÀ souscrit →
+    // "cannot add postgres_changes callbacks for realtime:unread-nav after subscribe()".
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const fetchMsgCount = async (userId: string) => {
+      const { data: convs } = await supabase.from('conversations')
         .select('id').or(`user_id.eq.${userId},seller_id.eq.${userId}`)
-      const convIds = (myConvs ?? []).map((c: any) => c.id)
-      let msgCount = 0
-      if (convIds.length > 0) {
-        const { count } = await supabase.from('messages')
-          .select('id', { count: 'exact', head: true })
-          .in('conversation_id', convIds)
-          .neq('sender_id', userId)
-          .eq('read', false)
-        msgCount = count ?? 0
-      }
-      setUnreadMsgs(msgCount)
+      const ids = (convs ?? []).map((c: any) => c.id)
+      if (ids.length === 0) return 0
+      const { count } = await supabase.from('messages')
+        .select('id', { count: 'exact', head: true })
+        .in('conversation_id', ids)
+        .neq('sender_id', userId)
+        .eq('read', false)
+      return count ?? 0
+    }
 
-      const { count: notifs } = await supabase.from('notifications')
+    const fetchNotifCount = async (userId: string) => {
+      const { count } = await supabase.from('notifications')
         .select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('read', false)
-      setUnreadNotifs(notifs ?? 0)
+      return count ?? 0
+    }
 
-      const ch = supabase.channel('unread-nav')
+    const teardownChannel = () => {
+      // Retire le canal suivi + tout résidu portant le même topic (remount, StrictMode…).
+      if (channel) { supabase.removeChannel(channel); channel = null }
+      supabase.getChannels()
+        .filter(c => c.topic === 'realtime:unread-nav')
+        .forEach(c => supabase.removeChannel(c))
+    }
+
+    const setup = async (userId: string) => {
+      setUnreadMsgs(await fetchMsgCount(userId))
+      setUnreadNotifs(await fetchNotifCount(userId))
+
+      // On repart toujours d'un canal propre avant de souscrire.
+      teardownChannel()
+      channel = supabase.channel('unread-nav')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
-          const { data: convs } = await supabase.from('conversations')
-            .select('id').or(`user_id.eq.${userId},seller_id.eq.${userId}`)
-          const ids = (convs ?? []).map((c: any) => c.id)
-          if (ids.length === 0) { setUnreadMsgs(0); return }
-          const { count } = await supabase.from('messages')
-            .select('id', { count: 'exact', head: true })
-            .in('conversation_id', ids)
-            .neq('sender_id', userId)
-            .eq('read', false)
-          setUnreadMsgs(count ?? 0)
+          setUnreadMsgs(await fetchMsgCount(userId))
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, async () => {
-          const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('read', false)
-          setUnreadNotifs(count ?? 0)
+          setUnreadNotifs(await fetchNotifCount(userId))
         })
         .subscribe()
-      return () => { supabase.removeChannel(ch) }
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null
       setIsLoggedIn(!!u)
-      if (!u) { setUnreadMsgs(0); setUnreadNotifs(0); return }
-      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') loadCounts(u.id)
+      if (!u) { setUnreadMsgs(0); setUnreadNotifs(0); teardownChannel(); return }
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') setup(u.id)
     })
 
-    return () => subscription.unsubscribe()
+    return () => { subscription.unsubscribe(); teardownChannel() }
   }, [])
 
   if (pathname?.startsWith('/auth') || pathname === '/login') return null

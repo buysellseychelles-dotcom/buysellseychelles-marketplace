@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useLang } from '@/lib/lang-context'
 
 export default function ContactButton({
   listingId,
@@ -12,6 +13,7 @@ export default function ContactButton({
   sellerId: string
 }) {
   const router = useRouter()
+  const { lang } = useLang()
   const [loading, setLoading] = useState(false)
 
   const handleContact = async () => {
@@ -74,7 +76,7 @@ export default function ContactButton({
       {loading ? (
         <span>Loading...</span>
       ) : (
-        <>💬 Send a message</>
+        <>💬 {lang === 'kr' ? 'Anvoy en mesaz' : 'Send a message'}</>
       )}
     </button>
   )

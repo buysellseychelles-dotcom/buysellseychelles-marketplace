@@ -8,6 +8,7 @@ import CategoryFields, { type ExtraFields } from '@/components/category-fields'
 import { compressImages } from '@/lib/compress-image'
 import { fileTooLarge, fileExceedsRaw } from '@/lib/upload-limits'
 import { storagePathFromUrl, LISTINGS_BUCKET } from '@/lib/storage-cleanup'
+import { districtsFor, ALL_DISTRICTS } from '@/lib/districts'
 
 const CATEGORIES = [
   { value: 'voiture',      label: '🚗 Vehicles' },
@@ -27,11 +28,6 @@ const CATEGORIES = [
 ]
 
 const ISLANDS = ['Mahé', 'Praslin', 'La Digue', 'Silhouette', 'Other islands']
-
-const MAHE_QUARTIERS = [
-  'Victoria', 'Beau Vallon', 'Anse Royale', 'Mont Fleuri',
-  'Quatre Bornes', 'Plaisance', 'Grand Anse Mahé', 'Glacis', 'Bel Air', 'Takamaka',
-]
 
 export default function EditListingPage() {
   const router = useRouter()
@@ -56,6 +52,8 @@ export default function EditListingPage() {
   const [quartier, setQuartier] = useState('')
   const [category, setCategory] = useState('')
   const [extra, setExtra] = useState<ExtraFields>({})
+  // Catégories sans prix : Jobs (emploi/emploi_demande) et Free & Exchange (dons/troc)
+  const hidePrice = ['emploi', 'emploi_demande', 'dons', 'troc'].includes(category)
   const [existingImages, setExistingImages] = useState<{ id?: string; image_url: string }[]>([])
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [newPreviews, setNewPreviews] = useState<string[]>([])
@@ -116,7 +114,7 @@ export default function EditListingPage() {
       const foundIsland = ISLANDS.find(i => loc.includes(i))
       if (foundIsland) {
         setIsland(foundIsland)
-        const foundQuartier = MAHE_QUARTIERS.find(q => loc.includes(q))
+        const foundQuartier = ALL_DISTRICTS.find(q => loc.includes(q))
         if (foundQuartier) setQuartier(foundQuartier)
       }
 
@@ -188,15 +186,15 @@ export default function EditListingPage() {
 
     setSaving(true)
 
-    const location = island === 'Mahé' && quartier ? `${quartier}, Mahé` : island
+    const location = quartier ? `${quartier}, ${island}` : island
 
     const { error: updateError } = await supabase
       .from('listings')
       .update({
         title: title.trim(),
         description: description.trim(),
-        price: priceNegotiable ? null : (price ? Number(price) : null),
-        price_negotiable: priceNegotiable,
+        price: hidePrice ? null : (priceNegotiable ? null : (price ? Number(price) : null)),
+        price_negotiable: hidePrice ? false : priceNegotiable,
         urgent,
         delivery,
         location,
@@ -400,7 +398,8 @@ export default function EditListingPage() {
         {/* Category-specific fields */}
         <CategoryFields category={category} fields={extra} onChange={setExtra} />
 
-        {/* Prix */}
+        {/* Prix — masqué pour les catégories Jobs et Free & Exchange */}
+        {!hidePrice && (
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-sm font-semibold text-gray-800">Price</label>
@@ -438,6 +437,7 @@ export default function EditListingPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Île */}
         <div>
@@ -452,11 +452,11 @@ export default function EditListingPage() {
           </div>
         </div>
 
-        {island === 'Mahé' && (
+        {districtsFor(island).length > 0 && (
           <div>
             <label className="text-sm font-semibold text-gray-800 block mb-2">District <span className="text-gray-400 font-normal">(optional)</span></label>
             <div className="flex flex-wrap gap-2">
-              {MAHE_QUARTIERS.map(q => (
+              {districtsFor(island).map(q => (
                 <button key={q} onClick={() => setQuartier(quartier === q ? '' : q)}
                   className={`py-1.5 px-3 rounded-full text-xs font-medium border transition-colors ${quartier === q ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}>
                   {q}

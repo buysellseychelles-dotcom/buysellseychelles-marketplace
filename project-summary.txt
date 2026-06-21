@@ -1,6 +1,6 @@
 ================================================================================
   BUYSELLSEYCHELLES.COM — RÉSUMÉ COMPLET DU PROJET
-  Généré le : 19 juin 2026
+  Généré le : 19 juin 2026 — Mis à jour le : 21 juin 2026
 ================================================================================
 
 
@@ -141,6 +141,14 @@ ANNONCES
   ✓ Publication annonce : titre, description*, photos* (min 1, max 3 gratuit / 10 PRO),
     catégorie*, île*, quartier (Mahé), prix (SCR/EUR), prix négociable, urgent,
     livraison disponible, téléphone (optionnel + toggle masqué)
+  ✓ Champs de prix conditionnels : pour les catégories "Jobs" (emploi /
+    emploi_demande) et "Free & Exchange" (dons / troc), le champ prix ET le
+    bouton "Negotiable" sont masqués (post-ad + edit-listing). À l'enregistrement
+    price = null et price_negotiable = false pour ces catégories.
+  ✓ Réinitialisation du formulaire de création (resetForm) : tous les champs sont
+    vidés après publication réussie (+ suppression du brouillon localStorage), via
+    le bouton "Clear", et automatiquement lors d'un changement de compte ou d'une
+    déconnexion (le brouillon non publié d'un autre compte est jeté).
   ✓ Modification annonce (edit-listing) avec AI quality check
   ✓ Suppression annonce avec nettoyage automatique photos Supabase Storage
   ✓ Expiration automatique à 60 jours (cron) — email J-7 + email jour J
@@ -294,6 +302,48 @@ PAGES STATIQUES INFORMATIVES
   ✓ /help — FAQ et aide utilisateur
   ✓ /safety — conseils de sécurité pour les transactions
   ✓ /advertise — réserver une bannière publicitaire (Stripe)
+
+CATÉGORIES (ARBORESCENCE — lib/category-tree.ts)
+  Arborescence à 2 niveaux : 14 catégories principales → sous-catégories.
+  Principales : 🚗 Vehicles · 🏡 Real Estate · 📱 Electronics · 🛋️ Home & Garden ·
+  👗 Fashion · 🧸 Family · 💼 Jobs · 🔧 Services · ⚽ Sports & Leisure ·
+  🐾 Pets & Animals · 🌴 Tourism & Activities · 🎁 Free & Exchange ·
+  🏭 Pro Equipment · 📦 Other.
+  ✓ NOUVEAU — Catégorie "Family" (🧸 / kr "Fanmiy"), 10 sous-catégories :
+    Baby Equipment, Kids Furniture, Baby Clothing, Kids Clothing, Maternity Wear,
+    Kids Shoes, Kids Watches & Jewelry, Kids Accessories & Bags, Games & Toys,
+    Babysitting. Sous-catégories en anglais uniquement (pas de créole).
+
+DISTRICTS / QUARTIERS PAR ÎLE (lib/districts.ts — formulaire post-ad & edit-listing)
+  Sélecteur de district (optionnel) affiché dynamiquement selon l'île choisie
+  (districtsFor(island)). Districts administratifs officiels des Seychelles :
+
+  Mahé (25) :
+    Greater Victoria — Victoria, English River, Saint Louis, Bel Air, Mont Fleuri,
+      Mont Buxton, Plaisance, Les Mamelles, Roche Caiman, Île Perseverance
+    Mahé rural — Glacis, Beau Vallon, Anse Étoile, Cascade, Port Glaud,
+      Grand Anse Mahé, Anse Boileau, Baie Lazare, Takamaka, Quatre Bornes,
+      Anse Royale, Au Cap, Pointe Larue, Anse aux Pins, Bel Ombre
+  Praslin (2) : Baie Sainte Anne, Grand Anse Praslin
+  La Digue (1) : La Digue
+  (Districts hérités non proposés mais conservés pour le parsing des anciennes
+   annonces : "Grand Anse".)
+  L'emplacement stocké est "Quartier, Île" si un district est choisi, sinon "Île".
+
+SYSTÈME DE LANGUE / TRADUCTION (i18n — lib/i18n.ts)
+  Politique : UI 100% anglais + option créole seychellois (toggle 🇸🇨 Kreol).
+  Aucun texte français visible côté utilisateur (le français reste réservé aux
+  commentaires de code). Tout texte UI passe par t(lang, 'key').
+  ✓ Sous-catégories (CATEGORY_LABELS) désormais EN ANGLAIS dans les deux langues :
+    kr === en pour toutes les entrées (ex. "Cars", "Bicycles") — y compris en mode
+    créole, pour éviter des traductions approximatives.
+  ✓ Audit français → anglais (2026-06-20) : ~40 chaînes traduites à travers pages,
+    composants, routes API et noms/descriptions de produits Stripe (checkout).
+  ✓ Éléments maintenus en anglais même en mode kr : descriptif bannière pub home
+    (banner_ad_desc), "Member since" (member_since / member_since_short), label
+    photo principale "Main", page entière /subscription.
+  ✓ Distinction créole (orthographe phonétique : "Anrezistre", "Swazir") vs
+    français standard maintenue dans la table de traduction.
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -563,5 +613,5 @@ DISPUTE
 
 
 ================================================================================
-  FIN DU DOCUMENT — buysellseychelles.com — 19 juin 2026
+  FIN DU DOCUMENT — buysellseychelles.com — 21 juin 2026
 ================================================================================

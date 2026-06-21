@@ -8,21 +8,19 @@ import Image from 'next/image'
 import { useLang } from '@/lib/lang-context'
 import { t } from '@/lib/i18n'
 import { CATEGORY_TREE, getCatLabel, getTopCatForValue } from '@/lib/category-tree'
+import { districtsFor } from '@/lib/districts'
 import CategoryFields, { type ExtraFields } from '@/components/category-fields'
 import { compressImages } from '@/lib/compress-image'
 import { fileTooLarge, fileExceedsRaw } from '@/lib/upload-limits'
 
 const ISLANDS = ['Mahé', 'Praslin', 'La Digue', 'Silhouette', 'Other islands']
 
-const MAHE_DISTRICTS = [
-  'Victoria', 'Beau Vallon', 'Anse Royale', 'Mont Fleuri',
-  'Quatre Bornes', 'Plaisance', 'Grand Anse', 'Glacis', 'Bel Air', 'Takamaka',
-]
-
 export default function PostAdPage() {
   const router = useRouter()
   const { lang } = useLang()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // Compte propriétaire du brouillon courant. `undefined` = pas encore résolu.
+  const userIdRef = useRef<string | null | undefined>(undefined)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -42,6 +40,8 @@ export default function PostAdPage() {
   const [delivery, setDelivery] = useState(false)
   const [priceSuggestion, setPriceSuggestion] = useState<number | null>(null)
   const [loadingSuggestion, setLoadingSuggestion] = useState(false)
+  // Catégories sans prix : Jobs (emploi/emploi_demande) et Free & Exchange (dons/troc)
+  const hidePrice = ['emploi', 'emploi_demande', 'dons', 'troc'].includes(category)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
@@ -84,27 +84,57 @@ export default function PostAdPage() {
     })
   }, [])
 
-  // Restore draft on mount
+  // Vide complètement le formulaire (champs + photos + brouillon mémorisé).
+  const resetForm = () => {
+    setTitle(''); setDescription(''); setPrice(''); setIsland(''); setQuartier('')
+    setCategory(''); setTopCatId(null); setPhone(''); setPhoneHidden(false)
+    setCurrency('SCR'); setUrgent(false); setPriceNegotiable(false); setDelivery(false)
+    setExtra({}); setFiles([]); setPreviews([]); setDraftSavedAt(null)
+    setErrors([]); setPriceSuggestion(null); setQualityScore(null); setQualityTips([])
+  }
+
+  // Le brouillon est lié au compte qui l'a créé. On suit l'état d'auth :
+  //  - première émission (INITIAL_SESSION) → on restaure le brouillon s'il
+  //    appartient bien à l'utilisateur courant ;
+  //  - changement de compte ou déconnexion → on jette tout brouillon non publié
+  //    pour repartir d'un formulaire vierge.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(DRAFT_KEY)
-      if (!saved) return
-      const d = JSON.parse(saved)
-      if (d.title) setTitle(d.title)
-      if (d.description) setDescription(d.description)
-      if (d.price) setPrice(d.price)
-      if (d.island) setIsland(d.island)
-      if (d.quartier) setQuartier(d.quartier)
-      if (d.category) setCategory(d.category)
-      if (d.phone) setPhone(d.phone)
-      if (d.phoneHidden !== undefined) setPhoneHidden(d.phoneHidden)
-      if (d.currency) setCurrency(d.currency)
-      if (d.urgent !== undefined) setUrgent(d.urgent)
-      if (d.priceNegotiable !== undefined) setPriceNegotiable(d.priceNegotiable)
-      if (d.delivery !== undefined) setDelivery(d.delivery)
-      if (d.extra) setExtra(d.extra)
-      if (d.savedAt) setDraftSavedAt(d.savedAt)
-    } catch {}
+    const restore = (userId: string | null) => {
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY)
+        if (!saved) return
+        const d = JSON.parse(saved)
+        // Brouillon d'un autre compte (ou anonyme) → on l'efface.
+        if ((d.userId ?? null) !== userId) { localStorage.removeItem(DRAFT_KEY); return }
+        if (d.title) setTitle(d.title)
+        if (d.description) setDescription(d.description)
+        if (d.price) setPrice(d.price)
+        if (d.island) setIsland(d.island)
+        if (d.quartier) setQuartier(d.quartier)
+        if (d.category) setCategory(d.category)
+        if (d.phone) setPhone(d.phone)
+        if (d.phoneHidden !== undefined) setPhoneHidden(d.phoneHidden)
+        if (d.currency) setCurrency(d.currency)
+        if (d.urgent !== undefined) setUrgent(d.urgent)
+        if (d.priceNegotiable !== undefined) setPriceNegotiable(d.priceNegotiable)
+        if (d.delivery !== undefined) setDelivery(d.delivery)
+        if (d.extra) setExtra(d.extra)
+        if (d.savedAt) setDraftSavedAt(d.savedAt)
+      } catch {}
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const newUserId = session?.user?.id ?? null
+      const prev = userIdRef.current
+      userIdRef.current = newUserId
+      if (prev === undefined) {
+        restore(newUserId)
+      } else if (prev !== newUserId) {
+        localStorage.removeItem(DRAFT_KEY)
+        resetForm()
+      }
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   // Auto-save draft with 1.5s debounce
@@ -113,6 +143,7 @@ export default function PostAdPage() {
     const timer = setTimeout(() => {
       const savedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        userId: userIdRef.current ?? null,
         title, description, price, island, quartier, category, phone, phoneHidden,
         currency, urgent, priceNegotiable, delivery, extra, savedAt,
       }))
@@ -149,7 +180,7 @@ export default function PostAdPage() {
     if (!title.trim()) errs.push(t(lang, 'err_title'))
     if (!category) errs.push(t(lang, 'err_category'))
     if (!island) errs.push(t(lang, 'err_island'))
-    if (files.length === 0) errs.push(lang === 'kr' ? 'Ou bezwen omwen 1 foto' : 'At least 1 photo is required')
+    if (files.length === 0) errs.push(lang === 'kr' ? 'Ou bezwen omwen 1 portre' : 'At least 1 photo is required')
     if (!description.trim()) errs.push(lang === 'kr' ? 'Description obligatwar' : 'Description is required')
     if (errs.length > 0) { setErrors(errs); return }
     setErrors([])
@@ -186,11 +217,11 @@ export default function PostAdPage() {
       .insert({
         title: title.trim(),
         description: description.trim(),
-        price: priceNegotiable ? null : (price ? Number(price) : null),
-        price_negotiable: priceNegotiable,
+        price: hidePrice ? null : (priceNegotiable ? null : (price ? Number(price) : null)),
+        price_negotiable: hidePrice ? false : priceNegotiable,
         urgent,
         delivery,
-        location: island === 'Mahé' && quartier ? `${quartier}, Mahé` : island,
+        location: quartier ? `${quartier}, ${island}` : island,
         category,
         user_id: user.id,
         boosted: false,
@@ -270,7 +301,7 @@ export default function PostAdPage() {
             <div className="flex items-center gap-2 mt-1">
               <p className="text-[11px] text-gray-400">{t(lang, 'draft_saved')} {draftSavedAt}</p>
               <button
-                onClick={() => { localStorage.removeItem(DRAFT_KEY); setTitle(''); setDescription(''); setPrice(''); setIsland(''); setQuartier(''); setCategory(''); setPhone(''); setExtra({}); setDraftSavedAt(null) }}
+                onClick={() => { localStorage.removeItem(DRAFT_KEY); resetForm() }}
                 className="text-[11px] text-red-400 hover:text-red-300 underline">
                 {t(lang, 'draft_clear')}
               </button>
@@ -312,7 +343,7 @@ export default function PostAdPage() {
                 <Image src={src} alt="" fill className="object-cover" />
                 {i === 0 && (
                   <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] font-bold text-center py-0.5">
-                    {lang === 'kr' ? 'Prinsipal' : 'Main'}
+                    Main
                   </span>
                 )}
                 <button onClick={() => removeImage(i)}
@@ -337,11 +368,11 @@ export default function PostAdPage() {
               <span className="text-amber-500 text-base shrink-0">📸</span>
               <div className="flex-1">
                 <p className="text-xs font-semibold text-amber-800">
-                  {lang === 'kr' ? 'Limit 3 foto' : 'Limit of 3 photos reached'}
+                  {lang === 'kr' ? 'Limit 3 portre' : 'Limit of 3 photos reached'}
                 </p>
                 <p className="text-xs text-amber-700 mt-0.5">
                   {lang === 'kr'
-                    ? 'Ou kapab azout ziska 10 foto — 30 SCR enn sel fwa.'
+                    ? 'Ou kapab azout ziska 10 portre — 30 SCR en sel fwa.'
                     : 'Unlock up to 10 photos for this listing — 30 SCR one-time.'}
                 </p>
                 <button
@@ -359,7 +390,7 @@ export default function PostAdPage() {
                   }}
                   className="mt-1.5 text-xs font-semibold text-amber-900 underline underline-offset-2"
                 >
-                  {lang === 'kr' ? 'Deklouver 10 foto →' : 'Unlock 10 photos — 30 SCR →'}
+                  {lang === 'kr' ? 'Deklouver 10 portre →' : 'Unlock 10 photos — 30 SCR →'}
                 </button>
               </div>
             </div>
@@ -370,7 +401,7 @@ export default function PostAdPage() {
             <p className="text-xs text-green-600 font-medium mt-1.5 flex items-center gap-1">
               <span>{isPro ? '⭐' : '✓'}</span>
               {isPro
-                ? (lang === 'kr' ? 'PRO — ziska 10 foto' : 'PRO — up to 10 photos')
+                ? (lang === 'kr' ? 'PRO — ziska 10 portre' : 'PRO — up to 10 photos')
                 : 'Photo pack active — up to 10 photos'}
             </p>
           )}
@@ -471,7 +502,8 @@ export default function PostAdPage() {
         {/* Category-specific fields */}
         <CategoryFields category={category} fields={extra} onChange={setExtra} />
 
-        {/* Price */}
+        {/* Price — masqué pour les catégories Jobs et Free & Exchange */}
+        {!hidePrice && (
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2">
@@ -480,10 +512,16 @@ export default function PostAdPage() {
                 <button type="button" disabled={loadingSuggestion}
                   onClick={async () => {
                     setLoadingSuggestion(true)
-                    const res = await fetch('/api/ai/price-suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category }) })
-                    const d = await res.json()
-                    if (d.suggested_price) { setPriceSuggestion(d.suggested_price); setPrice(String(d.suggested_price)) }
-                    setLoadingSuggestion(false)
+                    try {
+                      const res = await fetch('/api/ai/price-suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category }) })
+                      if (!res.ok) return
+                      const d = await res.json()
+                      if (d.suggested_price) { setPriceSuggestion(d.suggested_price); setPrice(String(d.suggested_price)) }
+                    } catch {
+                      // Échec réseau (mobile/iOS « Load failed ») : on ignore la suggestion silencieusement.
+                    } finally {
+                      setLoadingSuggestion(false)
+                    }
                   }}
                   className="text-[11px] text-blue-600 border border-blue-200 px-2 py-0.5 rounded-full hover:bg-blue-50 disabled:opacity-40">
                   {loadingSuggestion ? '...' : '💡 Suggest'}
@@ -524,6 +562,7 @@ export default function PostAdPage() {
           )}
           <p className="text-xs text-gray-400 mt-1">{t(lang, 'price_hint')}</p>
         </div>
+        )}
 
         {/* Island */}
         <div>
@@ -542,14 +581,14 @@ export default function PostAdPage() {
           </div>
         </div>
 
-        {/* Mahé districts */}
-        {island === 'Mahé' && (
+        {/* Districts */}
+        {districtsFor(island).length > 0 && (
           <div>
             <label className="text-sm font-semibold text-gray-800 block mb-2">
               {t(lang, 'district_label')} <span className="text-gray-400 font-normal">{t(lang, 'district_optional')}</span>
             </label>
             <div className="flex flex-wrap gap-2">
-              {MAHE_DISTRICTS.map(q => (
+              {districtsFor(island).map(q => (
                 <button key={q} onClick={() => setQuartier(quartier === q ? '' : q)}
                   className={`py-1.5 px-3 rounded-full text-xs font-medium border transition-colors ${
                     quartier === q ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
@@ -568,15 +607,21 @@ export default function PostAdPage() {
             <button type="button" disabled={qualityLoading || !title}
               onClick={async () => {
                 setQualityLoading(true)
-                const res = await fetch('/api/ai/quality', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ title, description, price: price ? Number(price) : 0 }),
-                })
-                const d = await res.json()
-                setQualityScore(d.quality_score ?? null)
-                setQualityTips(d.tips ?? [])
-                setQualityLoading(false)
+                try {
+                  const res = await fetch('/api/ai/quality', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, price: price ? Number(price) : 0 }),
+                  })
+                  if (!res.ok) return
+                  const d = await res.json()
+                  setQualityScore(d.quality_score ?? null)
+                  setQualityTips(d.tips ?? [])
+                } catch {
+                  // Échec réseau (mobile/iOS « Load failed ») : pas de score, on ne crashe pas.
+                } finally {
+                  setQualityLoading(false)
+                }
               }}
               className="text-[11px] text-purple-600 border border-purple-200 px-2.5 py-1 rounded-full hover:bg-purple-50 disabled:opacity-40 transition-colors">
               {qualityLoading ? '...' : '✨ Check quality'}
@@ -687,7 +732,7 @@ export default function PostAdPage() {
             </div>
             <p className="text-sm text-white/85 leading-relaxed mb-4">
               {lang === 'kr'
-                ? `Ou'n pibliye ${FREE_DAILY_LIMIT} anons gratis ozordi. Reesey dimen, oubyen pas PRO pour pibliye san limit.`
+                ? `Ou'n ariv ou limit pou ozordi. Ou'n pibliy ${FREE_DAILY_LIMIT} Lanons Gratwit ozordi. Reesey demen, oubyen pas PRO pou pibliy san limit.`
                 : `You've published your ${FREE_DAILY_LIMIT} free listings for today. Come back tomorrow, or go PRO to publish without limits.`}
             </p>
             <Link href="/subscription"

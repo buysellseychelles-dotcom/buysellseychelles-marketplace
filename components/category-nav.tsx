@@ -116,6 +116,14 @@ const IcoGift: IcoFn = (c, s = 28) => (
     <line x1="12" y1="8" x2="12" y2="21" />
   </svg>
 )
+const IcoFamily: IcoFn = (c, s = 28) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="8" cy="6" r="2.5" />
+    <circle cx="16" cy="6" r="2.5" />
+    <path d="M3 21v-3a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v3" />
+    <path d="M14 21v-2a4 4 0 0 1 4-4 3 3 0 0 1 3 3v3" />
+  </svg>
+)
 const IcoFactory: IcoFn = (c, s = 28) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 20h20M4 20V10l6-4v4l6-4v4l4-2v12" />
@@ -125,25 +133,28 @@ const IcoFactory: IcoFn = (c, s = 28) => (
 )
 
 // 4 catégories principales — couleurs du drapeau seychellois
+// Libellés créoles alignés sur CATEGORY_TREE (page de création d'annonce).
 const MAIN_CATS = [
   { value: 'voiture',      en: 'Vehicles',    kr: 'Transpor',  flag: FLAG.blue,   icon: IcoVehicles, emoji: '🚗' },
-  { value: 'immobilier',   en: 'Real Estate', kr: 'Propriete', flag: FLAG.yellow, icon: IcoHome,     emoji: '🏠' },
+  { value: 'immobilier',   en: 'Real Estate', kr: 'Imobilye',  flag: FLAG.yellow, icon: IcoHome,     emoji: '🏠' },
   { value: 'electronique', en: 'Electronics', kr: 'Elektronik',flag: FLAG.red,    icon: IcoPhone,    emoji: '📱' },
   { value: 'bateau',       en: 'Boats',       kr: 'Bato',      flag: FLAG.white,  icon: IcoBoat,     emoji: '⛵' },
 ]
 
 // Catégories du tiroir — couleurs du drapeau seychellois uniquement
+// Libellés créoles alignés sur CATEGORY_TREE (page de création d'annonce).
 const MORE_CATS = [
-  { value: 'emploi',   en: 'Jobs',     kr: 'Travay',  color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoBriefcase, emoji: '💼' },
-  { value: 'services', en: 'Services', kr: 'Servis',  color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoWrench,    emoji: '🔧' },
-  { value: 'tourisme', en: 'Tourism',  kr: 'Tourizm', color: FLAG.yellow.bg, inactiveBg: FLAG.yellow.inactiveBg, icon: IcoCompass,   emoji: '🌴' },
-  { value: 'mode',     en: 'Fashion',  kr: 'Mod',     color: FLAG.red.bg,    inactiveBg: FLAG.red.inactiveBg,    icon: IcoShirt,     emoji: '👗' },
-  { value: 'maison',   en: 'Home',     kr: 'Lakaz',   color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoSofa,      emoji: '🛋️' },
-  { value: 'loisirs',  en: 'Sports',   kr: 'Spor',    color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoSport,     emoji: '⚽' },
-  { value: 'animaux',  en: 'Pets',     kr: 'Zanimo',  color: FLAG.yellow.bg, inactiveBg: FLAG.yellow.inactiveBg, icon: IcoPaw,       emoji: '🐾' },
-  { value: 'dons',     en: 'Free',     kr: 'Gratis',  color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoGift,      emoji: '🎁' },
-  { value: 'pro',      en: 'Pro',      kr: 'Pro',     color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoFactory,   emoji: '🏭' },
-  { value: 'autre',    en: 'Other',    kr: 'Lot',     color: FLAG.red.bg,    inactiveBg: FLAG.red.inactiveBg,    icon: IcoBox,       emoji: '📦' },
+  { value: 'emploi',   en: 'Jobs',     kr: 'Travay',             color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoBriefcase, emoji: '💼' },
+  { value: 'services', en: 'Services', kr: 'Servis',             color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoWrench,    emoji: '🔧' },
+  { value: 'tourisme', en: 'Tourism',  kr: 'Tourizm & Aktivite', color: FLAG.yellow.bg, inactiveBg: FLAG.yellow.inactiveBg, icon: IcoCompass,   emoji: '🌴' },
+  { value: 'mode',     en: 'Fashion',  kr: 'Lanmod',             color: FLAG.red.bg,    inactiveBg: FLAG.red.inactiveBg,    icon: IcoShirt,     emoji: '👗' },
+  { value: 'maison',   en: 'Home',     kr: 'Kay & Zardin',       color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoSofa,      emoji: '🛋️' },
+  { value: 'family',   en: 'Family',   kr: 'Fanmiy',             color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoFamily,    emoji: '🧸' },
+  { value: 'loisirs',  en: 'Sports',   kr: 'Spor & Lwazir',      color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoSport,     emoji: '⚽' },
+  { value: 'animaux',  en: 'Pets',     kr: 'Zanimo',             color: FLAG.yellow.bg, inactiveBg: FLAG.yellow.inactiveBg, icon: IcoPaw,       emoji: '🐾' },
+  { value: 'dons',     en: 'Free',     kr: 'Gratwit e Esanz',    color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoGift,      emoji: '🎁' },
+  { value: 'pro',      en: 'Pro',      kr: 'Lekipaman Pro',      color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoFactory,   emoji: '🏭' },
+  { value: 'autre',    en: 'Other',    kr: 'Lezot',              color: FLAG.red.bg,    inactiveBg: FLAG.red.inactiveBg,    icon: IcoBox,       emoji: '📦' },
 ]
 
 function CategoryNavInner() {

@@ -25,19 +25,22 @@ type SearchParams = {
   min_beds?: string; tenure?: string; boat_type?: string; contract?: string
 }
 
+// Libellés créoles alignés sur CATEGORY_TREE (page de création d'annonce).
 const HOME_SECTIONS = [
   { value: 'voiture',      label_en: '🚗 Vehicles',        label_kr: '🚗 Transpor' },
-  { value: 'immobilier',   label_en: '🏡 Real Estate',      label_kr: '🏡 Propriete' },
+  { value: 'immobilier',   label_en: '🏡 Real Estate',      label_kr: '🏡 Imobilye' },
   { value: 'electronique', label_en: '📱 Electronics',      label_kr: '📱 Elektronik' },
   { value: 'bateau',       label_en: '⛵ Boats',            label_kr: '⛵ Bato' },
-  { value: 'loisirs',      label_en: '⚽ Sports & Leisure', label_kr: '⚽ Spor/Lwazip' },
+  { value: 'loisirs',      label_en: '⚽ Sports & Leisure', label_kr: '⚽ Spor & Lwazir' },
   { value: 'animaux',      label_en: '🐾 Pets & Animals',  label_kr: '🐾 Zanimo' },
-  { value: 'dons',         label_en: '🎁 Free & Exchange',  label_kr: '🎁 Gratis' },
+  { value: 'dons',         label_en: '🎁 Free & Exchange',  label_kr: '🎁 Gratwit e Esanz' },
   { value: 'emploi',       label_en: '💼 Jobs',             label_kr: '💼 Travay' },
   { value: 'services',     label_en: '🔧 Services',         label_kr: '🔧 Servis' },
-  { value: 'tourisme',     label_en: '🌴 Tourism',          label_kr: '🌴 Tourizm' },
-  { value: 'mode',         label_en: '👗 Fashion',          label_kr: '👗 Mod' },
-  { value: 'maison',       label_en: '🛋️ Home & Garden',    label_kr: '🛋️ Lakaz' },
+  { value: 'tourisme',     label_en: '🌴 Tourism',          label_kr: '🌴 Tourizm & Aktivite' },
+  { value: 'mode',         label_en: '👗 Fashion',          label_kr: '👗 Lanmod' },
+  { value: 'maison',       label_en: '🛋️ Home & Garden',    label_kr: '🛋️ Kay & Zardin' },
+  { value: 'family',       label_en: '🧸 Family',           label_kr: '🧸 Fanmiy' },
+  { value: 'autre',        label_en: '📦 Other',            label_kr: '📦 Lezot' },
 ]
 
 const CATEGORY_GROUP_MAP: Record<string, string[]> = {
@@ -53,6 +56,11 @@ const CATEGORY_GROUP_MAP: Record<string, string[]> = {
   tourisme:    ['tourisme', 'hebergement', 'activites'],
   mode:        ['mode', 'mode_femme', 'mode_homme', 'mode_enfant', 'chaussures', 'bijoux'],
   maison:      ['maison', 'ameublement', 'electromenager', 'decoration', 'bricolage', 'jardin'],
+  family:      ['baby_equipment', 'kids_furniture', 'baby_clothing', 'kids_clothing', 'maternity_wear', 'kids_shoes', 'kids_jewelry', 'kids_accessories', 'kids_toys', 'babysitting'],
+  // Catch-all : toute catégorie sans section dédiée (Other + Pro Equipment).
+  // ⚠️ Toute nouvelle catégorie de premier niveau doit être rattachée ici ou à
+  // une section ci-dessus, sinon ses annonces n'apparaîtront pas sur la home.
+  autre:       ['autre', 'pro'],
 }
 
 export default async function HomePage({ searchParams }: { searchParams?: SearchParams }) {

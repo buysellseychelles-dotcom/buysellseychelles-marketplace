@@ -5,11 +5,7 @@ import { useState, useTransition } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useLang } from '@/lib/lang-context'
 import { t, CATEGORIES, ISLANDS_LIST } from '@/lib/i18n'
-
-const MAHE_DISTRICTS = [
-  'Victoria', 'Beau Vallon', 'Anse Royale', 'Mont Fleuri',
-  'Quatre Bornes', 'Plaisance', 'Grand Anse', 'Glacis', 'Bel Air', 'Takamaka',
-]
+import { districtsFor } from '@/lib/districts'
 
 const CATEGORY_FILTERS: Record<string, { param: string; label_key: string; options: ({ value: string; key: string } | string)[] }[]> = {
   voiture: [
@@ -340,12 +336,12 @@ export function SearchFilters({ compact }: { compact?: boolean } = {}) {
                 </div>
               </div>
 
-              {/* Districts Mahé */}
-              {currentIsland === 'Mahé' && (
+              {/* Districts */}
+              {districtsFor(currentIsland).length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t(lang, 'filter_district')}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {MAHE_DISTRICTS.map(q => (
+                    {districtsFor(currentIsland).map(q => (
                       <button
                         key={q}
                         onClick={() => updateParams({ quartier: currentQuartier === q ? '' : q })}

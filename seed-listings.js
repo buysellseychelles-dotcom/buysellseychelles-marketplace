@@ -1,9 +1,19 @@
 const { createClient } = require('@supabase/supabase-js')
 
-const sb = createClient(
-  'https://sywutvsmoccbmylbocex.supabase.co',
-  'REDACTED_SERVICE_ROLE_KEY'
-)
+// Secrets are read from the environment — never hardcode keys in source.
+// Run with:  node --env-file=.env.local seed-listings.js
+const SUPABASE_URL =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://sywutvsmoccbmylbocex.supabase.co'
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  console.error(
+    'Missing SUPABASE_SERVICE_ROLE_KEY. Run with: node --env-file=.env.local seed-listings.js'
+  )
+  process.exit(1)
+}
+
+const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 const UID = 'f65cb17e-0a6a-4dd8-bf68-839212e1c565'
 
