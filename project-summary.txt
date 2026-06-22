@@ -1,6 +1,6 @@
 ================================================================================
   BUYSELLSEYCHELLES.COM — RÉSUMÉ COMPLET DU PROJET
-  Généré le : 19 juin 2026 — Mis à jour le : 21 juin 2026
+  Généré le : 19 juin 2026 — Mis à jour le : 22 juin 2026
 ================================================================================
 
 
@@ -149,6 +149,15 @@ ANNONCES
     vidés après publication réussie (+ suppression du brouillon localStorage), via
     le bouton "Clear", et automatiquement lors d'un changement de compte ou d'une
     déconnexion (le brouillon non publié d'un autre compte est jeté).
+  ✓ Vidage automatique au départ de la page /post-ad : dès que l'utilisateur quitte
+    la page — quelle que soit la raison (navigation interne, retour arrière,
+    fermeture d'onglet, rafraîchissement) — tous les champs du formulaire sont
+    réinitialisés (et le brouillon localStorage purgé). Aucune saisie ne persiste
+    d'une visite à l'autre. SEULE exception : l'aller-retour vers Stripe pour le
+    pack photo (bouton "Unlock 10 photos") — la saisie texte est mémorisée
+    temporairement (clé bss_post_stripe_return, TTL 30 min) et restaurée une seule
+    fois au retour sur /post-ad, puis purgée. Les photos (non sérialisables) sont à
+    re-sélectionner.
   ✓ Modification annonce (edit-listing) avec AI quality check
   ✓ Suppression annonce avec nettoyage automatique photos Supabase Storage
   ✓ Expiration automatique à 60 jours (cron) — email J-7 + email jour J
@@ -184,7 +193,8 @@ UTILISATEURS ET PROFIL
   ✓ Barre de progression de complétion de profil
   ✓ Badge ✓ Verified automatique (profil 100% complet)
   ✓ Badge ⭐ PRO (abonnement Stripe)
-  ✓ Brouillon annonce sauvegardé automatiquement (localStorage)
+  ✓ Formulaire /post-ad sans persistance : aucune saisie n'est conservée d'une
+    visite à l'autre (pas de brouillon restauré ; champs vidés à chaque sortie)
   ✓ Limite 3 annonces gratuites/jour (PRO = illimité)
   ✓ Toggle numéro de téléphone (masqué/visible sur les annonces)
   ✓ Toggle avatar (afficher/masquer sur les annonces)
@@ -344,6 +354,10 @@ SYSTÈME DE LANGUE / TRADUCTION (i18n — lib/i18n.ts)
     photo principale "Main", page entière /subscription.
   ✓ Distinction créole (orthographe phonétique : "Anrezistre", "Swazir") vs
     français standard maintenue dans la table de traduction.
+  ✓ JAMAIS traduits en créole (toujours en anglais, y compris en mode kr) :
+    - Le bandeau cookies (cookie banner) reste intégralement en anglais.
+    - TOUTES les sous-catégories du site restent en anglais dans les deux langues
+      (kr === en), sans exception, pour éviter toute traduction approximative.
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -613,5 +627,5 @@ DISPUTE
 
 
 ================================================================================
-  FIN DU DOCUMENT — buysellseychelles.com — 21 juin 2026
+  FIN DU DOCUMENT — buysellseychelles.com — 22 juin 2026
 ================================================================================

@@ -44,7 +44,6 @@ export default function PostAdPage() {
   const hidePrice = ['emploi', 'emploi_demande', 'dons', 'troc'].includes(category)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
-  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
   const [qualityScore, setQualityScore] = useState<number | null>(null)
   const [qualityTips, setQualityTips] = useState<string[]>([])
   const [qualityLoading, setQualityLoading] = useState(false)
@@ -54,6 +53,11 @@ export default function PostAdPage() {
   const [limitReached, setLimitReached] = useState(false)
 
   const DRAFT_KEY = 'bss_post_draft'
+  // Sauvegarde TEMPORAIRE uniquement pour l'aller-retour vers Stripe (pack photo).
+  // Restaurée une seule fois au retour puis purgée ; horodatée pour ne jamais
+  // ressurgir lors d'une visite ultérieure (ex. paiement abandonné).
+  const STRIPE_RETURN_KEY = 'bss_post_stripe_return'
+  const STRIPE_RETURN_TTL = 30 * 60 * 1000 // 30 min
   // Free accounts can publish up to 3 listings per day. PRO accounts are unlimited.
   const FREE_DAILY_LIMIT = 3
   // PRO subscribers and one-time photo-pack buyers both get the extended limit.
@@ -84,81 +88,66 @@ export default function PostAdPage() {
     })
   }, [])
 
-  // Vide complètement le formulaire (champs + photos + brouillon mémorisé).
+  // Vide complètement le formulaire (champs + photos).
   const resetForm = () => {
     setTitle(''); setDescription(''); setPrice(''); setIsland(''); setQuartier('')
     setCategory(''); setTopCatId(null); setPhone(''); setPhoneHidden(false)
     setCurrency('SCR'); setUrgent(false); setPriceNegotiable(false); setDelivery(false)
-    setExtra({}); setFiles([]); setPreviews([]); setDraftSavedAt(null)
+    setExtra({}); setFiles([]); setPreviews([])
     setErrors([]); setPriceSuggestion(null); setQualityScore(null); setQualityTips([])
   }
 
-  // Le brouillon est lié au compte qui l'a créé. On suit l'état d'auth :
-  //  - première émission (INITIAL_SESSION) → on restaure le brouillon s'il
-  //    appartient bien à l'utilisateur courant ;
-  //  - changement de compte ou déconnexion → on jette tout brouillon non publié
-  //    pour repartir d'un formulaire vierge.
+  // Le formulaire /post-ad ne conserve JAMAIS de saisie entre deux visites
+  // « normales ». SEULE exception : l'aller-retour vers Stripe pour le pack photo,
+  // où la saisie texte est restaurée une seule fois au retour (les photos, non
+  // sérialisables, doivent être re-sélectionnées). On purge ensuite tout, et on
+  // suit l'état d'auth pour repartir vierge lors d'un changement de compte.
   useEffect(() => {
-    const restore = (userId: string | null) => {
+    const marker = localStorage.getItem(STRIPE_RETURN_KEY)
+    if (marker) {
       try {
-        const saved = localStorage.getItem(DRAFT_KEY)
-        if (!saved) return
-        const d = JSON.parse(saved)
-        // Brouillon d'un autre compte (ou anonyme) → on l'efface.
-        if ((d.userId ?? null) !== userId) { localStorage.removeItem(DRAFT_KEY); return }
-        if (d.title) setTitle(d.title)
-        if (d.description) setDescription(d.description)
-        if (d.price) setPrice(d.price)
-        if (d.island) setIsland(d.island)
-        if (d.quartier) setQuartier(d.quartier)
-        if (d.category) setCategory(d.category)
-        if (d.phone) setPhone(d.phone)
-        if (d.phoneHidden !== undefined) setPhoneHidden(d.phoneHidden)
-        if (d.currency) setCurrency(d.currency)
-        if (d.urgent !== undefined) setUrgent(d.urgent)
-        if (d.priceNegotiable !== undefined) setPriceNegotiable(d.priceNegotiable)
-        if (d.delivery !== undefined) setDelivery(d.delivery)
-        if (d.extra) setExtra(d.extra)
-        if (d.savedAt) setDraftSavedAt(d.savedAt)
+        const d = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? '{}')
+        // On ne restaure que si la sauvegarde est récente (Stripe en cours).
+        if (d.ts && Date.now() - d.ts < STRIPE_RETURN_TTL) {
+          if (d.title) setTitle(d.title)
+          if (d.description) setDescription(d.description)
+          if (d.price) setPrice(d.price)
+          if (d.island) setIsland(d.island)
+          if (d.quartier) setQuartier(d.quartier)
+          if (d.category) setCategory(d.category)
+          if (d.phone) setPhone(d.phone)
+          if (d.phoneHidden !== undefined) setPhoneHidden(d.phoneHidden)
+          if (d.currency) setCurrency(d.currency)
+          if (d.urgent !== undefined) setUrgent(d.urgent)
+          if (d.priceNegotiable !== undefined) setPriceNegotiable(d.priceNegotiable)
+          if (d.delivery !== undefined) setDelivery(d.delivery)
+          if (d.extra) setExtra(d.extra)
+        }
       } catch {}
     }
+    // Restauration unique : on ne laisse subsister aucun brouillon au-delà.
+    localStorage.removeItem(DRAFT_KEY)
+    localStorage.removeItem(STRIPE_RETURN_KEY)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const newUserId = session?.user?.id ?? null
       const prev = userIdRef.current
       userIdRef.current = newUserId
-      if (prev === undefined) {
-        restore(newUserId)
-      } else if (prev !== newUserId) {
-        localStorage.removeItem(DRAFT_KEY)
-        resetForm()
-      }
+      if (prev !== undefined && prev !== newUserId) resetForm()
     })
     return () => subscription.unsubscribe()
   }, [])
 
-  // Auto-save draft with 1.5s debounce
+  // Quitter la page doit toujours laisser un formulaire vierge au retour, quelle
+  // que soit la raison :
+  //  - navigation interne (Link/router) → le composant est démonté, les états
+  //    useState repartent vides au remontage : rien à faire ;
+  //  - retour arrière depuis le cache bfcache du navigateur (page restaurée sans
+  //    remontage React) → on force la réinitialisation au pageshow persistant.
   useEffect(() => {
-    if (!title && !description && !category) return
-    const timer = setTimeout(() => {
-      const savedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        userId: userIdRef.current ?? null,
-        title, description, price, island, quartier, category, phone, phoneHidden,
-        currency, urgent, priceNegotiable, delivery, extra, savedAt,
-      }))
-      setDraftSavedAt(savedAt)
-    }, 1500)
-    return () => clearTimeout(timer)
-  }, [title, description, price, island, quartier, category, phone, phoneHidden, currency, urgent, priceNegotiable, delivery, extra])
-
-  // Quitter /post-ad sans publier doit vider le formulaire : on efface le
-  // brouillon au démontage (navigation interne via Link/router). Les états sont
-  // déjà en useState, donc ils repartent vides au remontage. NB : la redirection
-  // vers Stripe (pack photo) utilise window.location → rechargement complet, qui
-  // ne déclenche pas ce cleanup, donc le brouillon survit à ce cas légitime.
-  useEffect(() => {
-    return () => { localStorage.removeItem(DRAFT_KEY) }
+    const onPageShow = (e: PageTransitionEvent) => { if (e.persisted) resetForm() }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
   }, [])
 
   const handleImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -307,6 +296,7 @@ export default function PostAdPage() {
     }).catch(() => {})
 
     localStorage.removeItem(DRAFT_KEY)
+    localStorage.removeItem(STRIPE_RETURN_KEY)
     router.push('/dashboard')
   }
 
@@ -319,15 +309,12 @@ export default function PostAdPage() {
             <h1 className="text-xl font-bold">{t(lang, 'post_ad_title')}</h1>
             <p className="text-gray-400 text-sm mt-0.5">{t(lang, 'post_ad_subtitle')}</p>
           </div>
-          {draftSavedAt && (
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-[11px] text-gray-400">{t(lang, 'draft_saved')} {draftSavedAt}</p>
-              <button
-                onClick={() => { localStorage.removeItem(DRAFT_KEY); resetForm() }}
-                className="text-[11px] text-red-400 hover:text-red-300 underline">
-                {t(lang, 'draft_clear')}
-              </button>
-            </div>
+          {(title || description || category || price || island || quartier || phone || files.length > 0) && (
+            <button
+              onClick={resetForm}
+              className="text-[11px] text-red-400 hover:text-red-300 underline mt-1 shrink-0">
+              {t(lang, 'draft_clear')}
+            </button>
           )}
         </div>
       </div>
@@ -402,6 +389,16 @@ export default function PostAdPage() {
                   onClick={async () => {
                     const { data: { user } } = await supabase.auth.getUser()
                     if (!user) { router.push('/login'); return }
+                    // On mémorise la saisie texte le temps du paiement Stripe afin
+                    // de la restaurer au retour sur /post-ad (cf. STRIPE_RETURN_KEY).
+                    try {
+                      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                        title, description, price, island, quartier, category, phone,
+                        phoneHidden, currency, urgent, priceNegotiable, delivery, extra,
+                        ts: Date.now(),
+                      }))
+                      localStorage.setItem(STRIPE_RETURN_KEY, '1')
+                    } catch {}
                     const res = await fetch('/api/stripe/checkout', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
