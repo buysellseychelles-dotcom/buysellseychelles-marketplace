@@ -58,7 +58,7 @@ export const CATEGORY_TREE: TopCat[] = [
     id: 'maison_group',
     icon: '🛋️',
     en: 'Home & Garden',
-    kr: 'Kay & Zardin',
+    kr: 'Lakaz & Zarden',
     subs: [
       { value: 'ameublement',   en: 'Furniture',       kr: 'Meble' },
       { value: 'electromenager',en: 'Appliances',      kr: 'Elektromenajer' },

@@ -288,21 +288,25 @@ export function SearchFilters({ compact }: { compact?: boolean } = {}) {
       {/* Panel filtres — overlay + bottom sheet */}
       {showPanel && (
         <>
-          {/* Overlay */}
+          {/* Overlay — z-[60] : doit passer AU-DESSUS de la bottom-nav mobile (z-50) */}
           <div
-            className="fixed inset-0 bg-black/40 z-50 transition-opacity"
+            className="fixed inset-0 bg-black/40 z-[60] transition-opacity"
             onClick={() => setShowPanel(false)}
           />
 
-          {/* Mobile: bottom sheet — Desktop: modal centré */}
-          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[560px] md:max-w-[90vw] z-50 bg-white rounded-t-2xl md:rounded-2xl shadow-2xl max-h-[85vh] md:max-h-[80vh] overflow-y-auto">
+          {/* Mobile: bottom sheet — Desktop: modal centré.
+              z-[60] pour passer devant la bottom-nav mobile (z-50), sinon ses ~60px
+              recouvrent le bas du panneau (boutons Clear / Show results). */}
+          <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 md:w-[560px] md:max-w-[90vw] z-[60] bg-white rounded-t-2xl md:rounded-2xl shadow-2xl max-h-[85vh] md:max-h-[80vh] overflow-y-auto">
             {/* Handle */}
             <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-gray-100 sticky top-0 bg-white">
               <h2 className="font-bold text-base">Filters</h2>
               <button onClick={() => setShowPanel(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500">✕</button>
             </div>
 
-            <div className="px-4 py-4 space-y-5 pb-8">
+            {/* pb mobile = hauteur bottom-nav (60px) + safe-area pour que les
+                boutons Clear / Show results restent visibles et tappables. */}
+            <div className="px-4 py-4 space-y-5 pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-8">
 
               {/* Sort */}
               <div>

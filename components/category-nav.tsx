@@ -148,7 +148,7 @@ const MORE_CATS = [
   { value: 'services', en: 'Services', kr: 'Servis',             color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoWrench,    emoji: '🔧' },
   { value: 'tourisme', en: 'Tourism',  kr: 'Tourizm & Aktivite', color: FLAG.yellow.bg, inactiveBg: FLAG.yellow.inactiveBg, icon: IcoCompass,   emoji: '🌴' },
   { value: 'mode',     en: 'Fashion',  kr: 'Lanmod',             color: FLAG.red.bg,    inactiveBg: FLAG.red.inactiveBg,    icon: IcoShirt,     emoji: '👗' },
-  { value: 'maison',   en: 'Home',     kr: 'Kay & Zardin',       color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoSofa,      emoji: '🛋️' },
+  { value: 'maison',   en: 'Home',     kr: 'Lakaz & Zarden',     color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoSofa,      emoji: '🛋️' },
   { value: 'family',   en: 'Family',   kr: 'Fanmiy',             color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoFamily,    emoji: '🧸' },
   { value: 'loisirs',  en: 'Sports',   kr: 'Spor & Lwazir',      color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoSport,     emoji: '⚽' },
   { value: 'animaux',  en: 'Pets',     kr: 'Zanimo',             color: FLAG.yellow.bg, inactiveBg: FLAG.yellow.inactiveBg, icon: IcoPaw,       emoji: '🐾' },

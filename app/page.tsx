@@ -3,6 +3,7 @@ import Image from 'next/image'
 import SafeImage from '@/components/safe-image'
 import { Suspense } from 'react'
 import { cookies } from 'next/headers'
+import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { SearchFilters } from '@/components/search-filters'
 import CategoryNav from '@/components/category-nav'
@@ -38,7 +39,7 @@ const HOME_SECTIONS = [
   { value: 'services',     label_en: '🔧 Services',         label_kr: '🔧 Servis' },
   { value: 'tourisme',     label_en: '🌴 Tourism',          label_kr: '🌴 Tourizm & Aktivite' },
   { value: 'mode',         label_en: '👗 Fashion',          label_kr: '👗 Lanmod' },
-  { value: 'maison',       label_en: '🛋️ Home & Garden',    label_kr: '🛋️ Kay & Zardin' },
+  { value: 'maison',       label_en: '🛋️ Home & Garden',    label_kr: '🛋️ Lakaz & Zarden'},
   { value: 'family',       label_en: '🧸 Family',           label_kr: '🧸 Fanmiy' },
   { value: 'autre',        label_en: '📦 Other',            label_kr: '📦 Lezot' },
 ]
@@ -62,6 +63,52 @@ const CATEGORY_GROUP_MAP: Record<string, string[]> = {
   // une section ci-dessus, sinon ses annonces n'apparaîtront pas sur la home.
   autre:       ['autre', 'pro'],
 }
+
+// Données de la page d'accueil (bannières + sections + vendeurs PRO).
+// Identiques pour tous les visiteurs (indépendantes de la langue / des filtres),
+// donc mises en cache 60 s : les visites répétées sur Home évitent les
+// ~16 allers-retours Supabase et deviennent quasi instantanées côté serveur.
+const getHomeData = unstable_cache(
+  async () => {
+    const nowIso = new Date().toISOString()
+
+    // Jusqu'à 5 bannières clients actives (paiement confirmé, non expirées)
+    const { data: bannerData } = await supabase
+      .from('sponsored_banners').select('*').eq('active', true)
+      .or(`starts_at.is.null,starts_at.lte.${nowIso}`)
+      .or(`ends_at.is.null,ends_at.gte.${nowIso}`)
+      .order('created_at', { ascending: false }).limit(5)
+
+    const sectionResults = await Promise.all(
+      HOME_SECTIONS.map(s => {
+        const cats = CATEGORY_GROUP_MAP[s.value] ?? [s.value]
+        const q = supabase.from('listings')
+          .select('id,title,price,currency,location,status,created_at,user_id,boosted,boost_expires_at,listing_images(image_url)')
+          .not('status', 'in', '("sold","expired")')
+          .order('boosted', { ascending: false })  // featured listings first
+          .order('created_at', { ascending: false })
+          .limit(6)
+        return cats.length > 1 ? q.in('category', cats) : q.eq('category', cats[0])
+      })
+    )
+    const sectionData = sectionResults.map(r => r.data ?? [])
+
+    // Which sellers are PRO? (single lookup → gold badge on their cards)
+    const sellerIds = [...new Set(
+      sectionData.flatMap(rows => rows.map((l: any) => l.user_id)).filter(Boolean)
+    )]
+    let proSellerIds: string[] = []
+    if (sellerIds.length) {
+      const { data: pros } = await supabase
+        .from('profiles').select('id').eq('is_pro', true).in('id', sellerIds)
+      proSellerIds = (pros ?? []).map((p: any) => p.id)
+    }
+
+    return { bannerData: bannerData ?? [], sectionData, proSellerIds }
+  },
+  ['home-data'],
+  { revalidate: 60 },
+)
 
 export default async function HomePage({ searchParams }: { searchParams?: SearchParams }) {
   const params   = await searchParams
@@ -92,14 +139,6 @@ export default async function HomePage({ searchParams }: { searchParams?: Search
     fuel || gearbox || condition || propType || minBeds || tenure || boatType || contract
 
   const now = new Date()
-  const nowIso = now.toISOString()
-
-  // Jusqu'à 5 bannières clients actives (paiement confirmé, non expirées)
-  const { data: bannerData } = await supabase
-    .from('sponsored_banners').select('*').eq('active', true)
-    .or(`starts_at.is.null,starts_at.lte.${nowIso}`)
-    .or(`ends_at.is.null,ends_at.gte.${nowIso}`)
-    .order('created_at', { ascending: false }).limit(5)
 
   // ── Mode recherche / filtre ──────────────────────────────────────────────
   if (hasFilters) {
@@ -213,34 +252,13 @@ export default async function HomePage({ searchParams }: { searchParams?: Search
 
   // ── Page d'accueil ────────────────────────────────────────────────────────
 
-  const sectionResults = await Promise.all(
-    HOME_SECTIONS.map(s => {
-      const cats = CATEGORY_GROUP_MAP[s.value] ?? [s.value]
-      const q = supabase.from('listings')
-        .select('id,title,price,currency,location,status,created_at,user_id,boosted,boost_expires_at,listing_images(image_url)')
-        .not('status', 'in', '("sold","expired")')
-        .order('boosted', { ascending: false })  // featured listings first
-        .order('created_at', { ascending: false })
-        .limit(6)
-      return cats.length > 1 ? q.in('category', cats) : q.eq('category', cats[0])
-    })
-  )
-
-  // Which sellers are PRO? (single lookup → gold badge on their cards)
-  const sectionSellerIds = [...new Set(
-    sectionResults.flatMap(r => (r.data ?? []).map((l: any) => l.user_id)).filter(Boolean)
-  )]
-  let proSellers = new Set<string>()
-  if (sectionSellerIds.length) {
-    const { data: pros } = await supabase
-      .from('profiles').select('id').eq('is_pro', true).in('id', sectionSellerIds)
-    proSellers = new Set((pros ?? []).map((p: any) => p.id))
-  }
+  const { bannerData, sectionData, proSellerIds } = await getHomeData()
+  const proSellers = new Set(proSellerIds)
 
   const sections = HOME_SECTIONS.map((s, i) => ({
     ...s,
     label: lang === 'kr' ? s.label_kr : s.label_en,
-    listings: sectionResults[i].data ?? [],
+    listings: sectionData[i] ?? [],
   })).filter(s => s.listings.length > 0)
 
   return (

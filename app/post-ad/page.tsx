@@ -152,6 +152,15 @@ export default function PostAdPage() {
     return () => clearTimeout(timer)
   }, [title, description, price, island, quartier, category, phone, phoneHidden, currency, urgent, priceNegotiable, delivery, extra])
 
+  // Quitter /post-ad sans publier doit vider le formulaire : on efface le
+  // brouillon au démontage (navigation interne via Link/router). Les états sont
+  // déjà en useState, donc ils repartent vides au remontage. NB : la redirection
+  // vers Stripe (pack photo) utilise window.location → rechargement complet, qui
+  // ne déclenche pas ce cleanup, donc le brouillon survit à ce cas légitime.
+  useEffect(() => {
+    return () => { localStorage.removeItem(DRAFT_KEY) }
+  }, [])
+
   const handleImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const remaining = PHOTO_LIMIT - files.length
     if (remaining <= 0) { e.target.value = ''; return }
@@ -262,13 +271,26 @@ export default function PostAdPage() {
       return
     }
 
-    for (const file of files) {
-      const fileName = `${listing.id}-${Date.now()}-${file.name}`
-      const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, file)
-      if (!uploadError) {
-        const { data } = supabase.storage.from('listings').getPublicUrl(fileName)
-        await supabase.from('listing_images').insert({ listing_id: listing.id, image_url: data.publicUrl })
-      }
+    // Uploads en parallèle (au lieu de séquentiels) : le délai de publication
+    // devient celui de la photo la plus lente, pas la somme de toutes. L'index
+    // garantit des noms uniques même si Date.now() est identique entre photos.
+    // L'ordre des résultats suit l'ordre des fichiers (réorganisation conservée).
+    const uploadedUrls = (
+      await Promise.all(
+        files.map(async (file, i) => {
+          const fileName = `${listing.id}-${Date.now()}-${i}-${file.name}`
+          const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, file)
+          if (uploadError) return null
+          return supabase.storage.from('listings').getPublicUrl(fileName).data.publicUrl
+        })
+      )
+    ).filter((url): url is string => url !== null)
+
+    // Un seul insert groupé pour toutes les images (au lieu d'un par photo).
+    if (uploadedUrls.length > 0) {
+      await supabase
+        .from('listing_images')
+        .insert(uploadedUrls.map(image_url => ({ listing_id: listing.id, image_url })))
     }
 
     fetch('/api/notify/alerts', {
@@ -429,7 +451,8 @@ export default function PostAdPage() {
             <div className="flex items-center gap-2 mb-3">
               <span className="flex items-center gap-1.5 bg-black text-white text-sm font-medium px-3 py-1.5 rounded-full">
                 {getTopCatForValue(category) && `${getTopCatForValue(category)!.icon} `}
-                {getCatLabel(category, lang)}
+                {/* Les sous-catégories restent TOUJOURS en anglais. */}
+                {getCatLabel(category, 'en')}
               </span>
               <button
                 type="button"
@@ -488,7 +511,8 @@ export default function PostAdPage() {
                           onClick={() => { setCategory(sub.value); setTopCatId(null) }}
                           className="py-3 px-3 rounded-xl text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:border-gray-800 hover:bg-gray-50 transition-colors text-left"
                         >
-                          {lang === 'kr' ? sub.kr : sub.en}
+                          {/* Les sous-catégories restent TOUJOURS en anglais. */}
+                          {sub.en}
                         </button>
                       ))}
                     </div>

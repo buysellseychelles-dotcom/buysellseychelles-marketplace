@@ -54,7 +54,8 @@ export default function CategoryPageContent({
                 {sub.emoji}
               </div>
               <span className="text-[12px] font-bold text-gray-700 text-center leading-tight px-1">
-                {lang === 'kr' ? sub.label_kr : sub.label_en}
+                {/* Les sous-catégories restent TOUJOURS en anglais, quelle que soit la langue. */}
+                {sub.label_en}
               </span>
             </Link>
           ))}

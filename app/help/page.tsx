@@ -18,7 +18,7 @@ const SECTIONS = [
       },
       {
         q: 'How many photos can I add?',
-        a: 'You can add up to 5 photos per listing. Good photos increase your chances of selling quickly — use natural light and show the item from several angles.',
+        a: 'You can add up to 3 photos per listing. Good photos increase your chances of selling quickly — use natural light and show the item from several angles.',
       },
       {
         q: 'How long does my ad stay online?',
