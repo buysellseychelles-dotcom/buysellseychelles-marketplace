@@ -79,7 +79,7 @@ export default function FavoriteButton({
         </span>
       )}
       {viewsCount > 0 && (
-        <span className="text-xs text-gray-400 font-normal">· {viewsCount} vue{viewsCount > 1 ? 's' : ''}</span>
+        <span className="text-xs text-gray-400 font-normal">· {viewsCount} view{viewsCount > 1 ? 's' : ''}</span>
       )}
     </button>
   )

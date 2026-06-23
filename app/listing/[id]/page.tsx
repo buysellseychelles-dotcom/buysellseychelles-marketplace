@@ -11,6 +11,7 @@ import { SITE_URL } from '@/lib/site'
 import { buildListingSlug, extractListingId, listingHref } from '@/lib/slug'
 import BoostButton from '@/components/boost-button'
 import { RecentlyViewedTracker } from '@/components/recently-viewed'
+import ViewTracker from '@/components/view-tracker'
 import PhoneReveal from '@/components/phone-reveal'
 import PriceDropBadge from '@/components/price-tracker'
 import ContactButton from '@/components/contact-button'
@@ -325,7 +326,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
-      <script dangerouslySetInnerHTML={{ __html: `fetch('/api/track/view',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listingId:'${listing.id}'})})` }} />
+      <ViewTracker listingId={listing.id} />
 
       {/* ── Layout desktop 2 colonnes ── */}
       <div className="lg:max-w-7xl lg:mx-auto lg:px-8 lg:pt-6 lg:grid lg:grid-cols-[1fr_380px] lg:gap-8 lg:items-start">
