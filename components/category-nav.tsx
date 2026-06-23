@@ -124,6 +124,14 @@ const IcoFamily: IcoFn = (c, s = 28) => (
     <path d="M14 21v-2a4 4 0 0 1 4-4 3 3 0 0 1 3 3v3" />
   </svg>
 )
+const IcoCommunity: IcoFn = (c, s = 28) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+)
 const IcoFactory: IcoFn = (c, s = 28) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 20h20M4 20V10l6-4v4l6-4v4l4-2v12" />
@@ -153,6 +161,7 @@ const MORE_CATS = [
   { value: 'loisirs',  en: 'Sports',   kr: 'Spor & Lwazir',      color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoSport,     emoji: '⚽' },
   { value: 'animaux',  en: 'Pets',     kr: 'Zanimo',             color: FLAG.yellow.bg, inactiveBg: FLAG.yellow.inactiveBg, icon: IcoPaw,       emoji: '🐾' },
   { value: 'dons',     en: 'Free',     kr: 'Gratwit e Esanz',    color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoGift,      emoji: '🎁' },
+  { value: 'community',en: 'Community',kr: 'Kominote',           color: FLAG.green.bg,  inactiveBg: FLAG.green.inactiveBg,  icon: IcoCommunity, emoji: '🤝' },
   { value: 'pro',      en: 'Pro',      kr: 'Lekipaman Pro',      color: FLAG.blue.bg,   inactiveBg: FLAG.blue.inactiveBg,   icon: IcoFactory,   emoji: '🏭' },
   { value: 'autre',    en: 'Other',    kr: 'Lezot',              color: FLAG.red.bg,    inactiveBg: FLAG.red.inactiveBg,    icon: IcoBox,       emoji: '📦' },
 ]

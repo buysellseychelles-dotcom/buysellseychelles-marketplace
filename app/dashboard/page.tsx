@@ -266,9 +266,21 @@ export default function DashboardPage() {
   }
 
   const deleteListing = async (id: string) => {
-    await supabase.from('listing_images').delete().eq('listing_id', id)
-    await supabase.from('listings').delete().eq('id', id)
-    setListings(prev => prev.filter(l => l.id !== id))
+    // Passe par l'API service-role : supprime aussi les photos du Storage et les
+    // notifications liées (sur les comptes d'AUTRES utilisateurs — abonnés / favoris),
+    // ce que le client anon ne peut pas faire à cause de la RLS.
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const fd = new FormData()
+    fd.append('id', id)
+    const res = await fetch('/api/listings/delete', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+      body: fd,
+    })
+    if (res.ok) {
+      setListings(prev => prev.filter(l => l.id !== id))
+    }
     setDeleteId(null)
   }
 

@@ -51,3 +51,22 @@ export async function deleteListingPhotos(
 
   return paths.length
 }
+
+/**
+ * Supprime les notifications qui pointent vers les annonces fournies.
+ * Les notifications n'ont pas de colonne `listing_id` : le rattachement à une
+ * annonce est encodé dans le champ `link` sous la forme `/listing/<id>`
+ * (voir app/api/notify/*). On supprime donc par lien afin qu'aucune
+ * notification orpheline (cliquable → 404) ne subsiste après la suppression.
+ * À appeler lors de la suppression d'annonces.
+ *
+ * Nécessite un client Supabase admin (service role) pour ignorer la RLS.
+ */
+export async function deleteListingNotifications(
+  supabase: SupabaseClient,
+  listingIds: string[],
+): Promise<void> {
+  if (!listingIds || listingIds.length === 0) return
+  const links = listingIds.map((id) => `/listing/${id}`)
+  await supabase.from('notifications').delete().in('link', links)
+}

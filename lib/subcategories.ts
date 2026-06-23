@@ -108,6 +108,10 @@ export const SUBCATEGORIES: Record<string, Subcat[]> = {
     { value: 'pro', label_en: 'Medical',             label_kr: 'Medikal',        emoji: '🏥' },
     { value: 'pro', label_en: 'Agriculture',         label_kr: 'Agrikilti',      emoji: '🌾' },
   ],
+  community: [
+    { value: 'wanted',     label_en: 'Wanted',       label_kr: 'Wanted',       emoji: '🙋' },
+    { value: 'lost_found', label_en: 'Lost & Found', label_kr: 'Lost & Found', emoji: '🧳' },
+  ],
   autre: [
     { value: 'autre', label_en: 'Miscellaneous', label_kr: 'Divèr', emoji: '📦' },
   ],
@@ -130,5 +134,6 @@ export const CATEGORY_META: Record<string, {
   animaux:      { label_en: 'Pets & Animals',    label_kr: 'Zanimo',      textColor: '#fff',    bg: '#92400e' },
   dons:         { label_en: 'Free & Exchange',   label_kr: 'Gratis',      textColor: '#fff',    bg: '#15803d' },
   pro:          { label_en: 'Pro Equipment',     label_kr: 'Ekipman Pro', textColor: '#fff',    bg: '#374151' },
+  community:    { label_en: 'Community',          label_kr: 'Kominote',    textColor: '#fff',    bg: '#4f46e5' },
   autre:        { label_en: 'Other',             label_kr: 'Lot',         textColor: '#fff',    bg: '#4b5563' },
 }

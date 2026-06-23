@@ -18,6 +18,7 @@ export const CATEGORIES = {
     { value: 'animaux', label: '🐾 Pets & Animals' },
     { value: 'dons', label: '🎁 Free & Exchange' },
     { value: 'pro', label: '🏭 Pro Equipment' },
+    { value: 'community', label: '🤝 Community' },
     { value: 'autre', label: '📦 Other' },
   ],
   kr: [
@@ -37,6 +38,7 @@ export const CATEGORIES = {
     { value: 'animaux', label: '🐾 Zanimo' },
     { value: 'dons', label: '🎁 Gratwit e Esanz' },
     { value: 'pro', label: '🏭 Lekipaman Pro' },
+    { value: 'community', label: '🤝 Kominote' },
     { value: 'autre', label: '📦 Lezot' },
   ],
 }
@@ -117,6 +119,9 @@ export const CATEGORY_LABELS: Record<string, { en: string; kr: string }> = {
   // Free & Exchange
   dons:             { en: 'Free Items',              kr: 'Free Items' },
   troc:             { en: 'Exchange / Barter',       kr: 'Exchange / Barter' },
+  // Community (English-only sub-categories)
+  wanted:           { en: 'Wanted',                  kr: 'Wanted' },
+  lost_found:       { en: 'Lost & Found',            kr: 'Lost & Found' },
   // Other
   pro:              { en: 'Pro Equipment',           kr: 'Pro Equipment' },
   autre:            { en: 'Other',                   kr: 'Other' },
@@ -309,6 +314,9 @@ export const translations = {
     press_enter: 'Press Enter to send',
     view_listing: 'View listing',
     conversation: 'Conversation',
+    new_message: 'New message',
+    delete_conversation: 'Delete conversation',
+    delete_conversation_confirm: 'Delete this conversation? This cannot be undone.',
 
     // Seller page
     verified: '✓ Verified',
@@ -657,6 +665,9 @@ export const translations = {
     press_enter: 'Apiy lo Enter pou anvoye',
     view_listing: 'Vwar lanons',
     conversation: 'Konversasyon',
+    new_message: 'Nouvo mesaz',
+    delete_conversation: 'Efas konversasyon',
+    delete_conversation_confirm: 'Efas sa konversasyon? Sa pa kapab refer.',
 
     // Seller page
     verified: '✓ Verifye',

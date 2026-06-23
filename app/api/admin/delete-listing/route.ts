@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { deleteListingPhotos } from '@/lib/storage-cleanup'
+import { deleteListingPhotos, deleteListingNotifications } from '@/lib/storage-cleanup'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,6 +16,8 @@ export async function POST(req: Request) {
 
   // Supprime les photos du Storage + les lignes listing_images (anti-orphelins)
   await deleteListingPhotos(supabase, [listingId])
+  // Efface les notifications liées à l'annonce (évite les liens 404)
+  await deleteListingNotifications(supabase, [listingId])
   await supabase.from('listings').delete().eq('id', listingId)
   if (reportId) await supabase.from('reports').update({ resolved: true }).eq('id', reportId)
 

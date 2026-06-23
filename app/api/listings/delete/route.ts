@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
-import { deleteListingPhotos } from '@/lib/storage-cleanup'
+import { deleteListingPhotos, deleteListingNotifications } from '@/lib/storage-cleanup'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,6 +51,9 @@ export async function POST(req: Request) {
     // 🧹 supprime d'abord les photos du Storage (évite les fichiers orphelins)
     await deleteListingPhotos(supabase, [id])
 
+    // 🔔 efface les notifications liées à cette annonce (sinon elles pointent vers une page 404)
+    await deleteListingNotifications(supabase, [id])
+
     // 🗑 delete sécurisé
     const { error } = await supabase
       .from('listings')
@@ -61,7 +64,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.redirect(new URL('/my-listings', req.url))
+    return NextResponse.json({ ok: true })
 
   } catch (err) {
     console.error(err)

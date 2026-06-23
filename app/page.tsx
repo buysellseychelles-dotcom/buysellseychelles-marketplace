@@ -41,6 +41,8 @@ const HOME_SECTIONS = [
   { value: 'mode',         label_en: '👗 Fashion',          label_kr: '👗 Lanmod' },
   { value: 'maison',       label_en: '🛋️ Home & Garden',    label_kr: '🛋️ Lakaz & Zarden'},
   { value: 'family',       label_en: '🧸 Family',           label_kr: '🧸 Fanmiy' },
+  { value: 'pro',          label_en: '🏭 Pro Equipment',    label_kr: '🏭 Lekipaman Pro' },
+  { value: 'community',    label_en: '🤝 Community',        label_kr: '🤝 Kominote' },
   { value: 'autre',        label_en: '📦 Other',            label_kr: '📦 Lezot' },
 ]
 
@@ -58,10 +60,12 @@ const CATEGORY_GROUP_MAP: Record<string, string[]> = {
   mode:        ['mode', 'mode_femme', 'mode_homme', 'mode_enfant', 'chaussures', 'bijoux'],
   maison:      ['maison', 'ameublement', 'electromenager', 'decoration', 'bricolage', 'jardin'],
   family:      ['baby_equipment', 'kids_furniture', 'baby_clothing', 'kids_clothing', 'maternity_wear', 'kids_shoes', 'kids_jewelry', 'kids_accessories', 'kids_toys', 'babysitting'],
-  // Catch-all : toute catégorie sans section dédiée (Other + Pro Equipment).
+  pro:         ['pro'],
+  community:   ['wanted', 'lost_found'],
+  // Catch-all : toute catégorie sans section dédiée.
   // ⚠️ Toute nouvelle catégorie de premier niveau doit être rattachée ici ou à
   // une section ci-dessus, sinon ses annonces n'apparaîtront pas sur la home.
-  autre:       ['autre', 'pro'],
+  autre:       ['autre'],
 }
 
 // Données de la page d'accueil (bannières + sections + vendeurs PRO).

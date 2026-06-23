@@ -27,6 +27,13 @@ export default function ChatPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { lang } = useLang()
+
+  // Conversation pas encore créée en base : on l'insère seulement au 1er envoi.
+  const isNew = id === 'new'
+  // Lecture des query params (?listing=&seller=) côté client uniquement —
+  // évite la contrainte Suspense de useSearchParams au build (Next 16).
+  const getParam = (key: string) =>
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(key) : null
   const bottomRef = useRef<HTMLDivElement>(null)
   const imgInputRef = useRef<HTMLInputElement>(null)
 
@@ -68,13 +75,38 @@ export default function ChatPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversationId: id, userId }),
-      }).then(() => window.dispatchEvent(new CustomEvent('bss-messages-read')))
+      }).then(() => window.dispatchEvent(new CustomEvent('bss-messages-read', { detail: { conversationId: id } })))
         .catch(() => {})
 
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setUserId(user.id)
+
+      // ── Conversation neuve : rien en base, on prépare juste l'UI ──
+      if (isNew) {
+        const listingId = getParam('listing')
+        const sellerId = getParam('seller')
+        if (!listingId || !sellerId || sellerId === user.id) { router.push('/conversations'); return }
+
+        const { data: listing } = await supabase
+          .from('listings').select('title, status, category').eq('id', listingId).single()
+
+        setConv({ id: 'new', listing_id: listingId, user_id: user.id, seller_id: sellerId, listing: listing ?? undefined })
+        setListingStatus(listing?.status ?? 'active')
+        setOtherUserId(sellerId)
+
+        const [{ data: myBlock }, { data: theirBlock }] = await Promise.all([
+          supabase.from('blocks').select('id').eq('blocker_id', user.id).eq('blocked_id', sellerId).maybeSingle(),
+          supabase.from('blocks').select('id').eq('blocker_id', sellerId).eq('blocked_id', user.id).maybeSingle(),
+        ])
+        setIBlockedThem(!!myBlock)
+        setTheyBlockedMe(!!theirBlock)
+
+        setMessages([])
+        setLoading(false)
+        return
+      }
 
       const { data: convData } = await supabase
         .from('conversations')
@@ -123,9 +155,31 @@ export default function ChatPage() {
     init()
 
     return () => { if (channel) supabase.removeChannel(channel) }
-  }, [id, router])
+  }, [id, router, isNew])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  // Renvoie l'id de conversation, en la créant en base si elle n'existait pas encore.
+  const ensureConversation = useCallback(async (): Promise<string | null> => {
+    if (!isNew) return id
+    if (!userId) return null
+    const listingId = getParam('listing')
+    const sellerId = getParam('seller')
+    if (!listingId || !sellerId) return null
+
+    // Évite un doublon si la conversation a été créée entre-temps.
+    const { data: existing } = await supabase
+      .from('conversations').select('id')
+      .eq('listing_id', listingId).eq('user_id', userId).eq('seller_id', sellerId).maybeSingle()
+    if (existing) return existing.id
+
+    const { data: created } = await supabase
+      .from('conversations').insert({
+        listing_id: listingId, user_id: userId, seller_id: sellerId,
+        last_message: '', updated_at: new Date().toISOString(),
+      }).select('id').single()
+    return created?.id ?? null
+  }, [isNew, id, userId])
 
   const sendMessage = async () => {
     if (!text.trim() || !userId || !conv || sending) return
@@ -133,18 +187,24 @@ export default function ChatPage() {
     const msgText = text.trim()
     setText('')
 
+    const convId = await ensureConversation()
+    if (!convId) { setSending(false); setText(msgText); return }
+
     const { error } = await supabase.from('messages').insert({
-      conversation_id: id, sender_id: userId, message: msgText, listing_id: conv.listing_id,
+      conversation_id: convId, sender_id: userId, message: msgText, listing_id: conv.listing_id,
     })
 
     if (!error) {
       await supabase.from('conversations')
-        .update({ last_message: msgText, updated_at: new Date().toISOString() }).eq('id', id)
+        .update({ last_message: msgText, updated_at: new Date().toISOString(), hidden_by_user: false, hidden_by_seller: false })
+        .eq('id', convId)
       fetch('/api/notify/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId: id, senderId: userId, messageText: msgText }),
+        body: JSON.stringify({ conversationId: convId, senderId: userId, messageText: msgText }),
       }).catch(() => {})
+      // Bascule sur la vraie conversation maintenant qu'elle existe.
+      if (isNew) { setSending(false); router.replace(`/conversations/${convId}`); return }
     }
     setSending(false)
   }
@@ -158,23 +218,36 @@ export default function ChatPage() {
       return
     }
     setSending(true)
+    const convId = await ensureConversation()
+    if (!convId) {
+      setSending(false)
+      if (imgInputRef.current) imgInputRef.current.value = ''
+      return
+    }
     const ext = file.name.split('.').pop() ?? 'jpg'
-    const fileName = `chat/${conv.id}-${Date.now()}.${ext}`
+    const fileName = `chat/${convId}-${Date.now()}.${ext}`
     const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, file)
     if (!uploadError) {
       const { data } = supabase.storage.from('listings').getPublicUrl(fileName)
       const imageMsg = `__img__:${data.publicUrl}`
       const { error } = await supabase.from('messages').insert({
-        conversation_id: id, sender_id: userId, message: imageMsg, listing_id: conv.listing_id,
+        conversation_id: convId, sender_id: userId, message: imageMsg, listing_id: conv.listing_id,
       })
       if (!error) {
         await supabase.from('conversations')
-          .update({ last_message: '📷 Photo', updated_at: new Date().toISOString() }).eq('id', id)
+          .update({ last_message: '📷 Photo', updated_at: new Date().toISOString(), hidden_by_user: false, hidden_by_seller: false })
+          .eq('id', convId)
+        if (isNew) {
+          setSending(false)
+          if (imgInputRef.current) imgInputRef.current.value = ''
+          router.replace(`/conversations/${convId}`)
+          return
+        }
       }
     }
     setSending(false)
     if (imgInputRef.current) imgInputRef.current.value = ''
-  }, [userId, conv, sending, id, lang])
+  }, [userId, conv, sending, lang, isNew, router, ensureConversation])
 
   const markAsSold = async () => {
     if (!conv || markingSold) return
@@ -296,10 +369,12 @@ export default function ChatPage() {
             <>
               <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
               <div className="absolute right-0 top-9 w-44 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-                <button onClick={() => { setShowDispute(true); setMenuOpen(false) }}
-                  className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 text-left">
-                  ⚠️ Report a problem
-                </button>
+                {!isNew && (
+                  <button onClick={() => { setShowDispute(true); setMenuOpen(false) }}
+                    className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 text-left">
+                    ⚠️ Report a problem
+                  </button>
+                )}
                 <button onClick={toggleBlock} disabled={blockLoading}
                   className={`flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-red-50 text-left ${iBlockedThem ? 'text-gray-500' : 'text-red-600'}`}>
                   🚫 {iBlockedThem ? 'Unblock user' : 'Block user'}

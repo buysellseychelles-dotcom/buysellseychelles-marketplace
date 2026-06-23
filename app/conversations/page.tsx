@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useLang } from '@/lib/lang-context'
+import { t } from '@/lib/i18n'
 
 type Conversation = {
   id: string
@@ -24,16 +25,21 @@ export default function ConversationsPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [unreadByConv, setUnreadByConv] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const loadAll = async (uid: string) => {
     const { data } = await supabase
       .from('conversations')
-      .select('id, listing_id, user_id, seller_id, last_message, updated_at')
+      .select('id, listing_id, user_id, seller_id, last_message, updated_at, hidden_by_user, hidden_by_seller')
       .or(`user_id.eq.${uid},seller_id.eq.${uid}`)
       .order('updated_at', { ascending: false })
 
     if (data) {
-      const enriched = await Promise.all(data.map(async (conv: any) => {
+      // Exclut les conversations que CET utilisateur a masquées de sa liste.
+      const visible = data.filter((conv: any) =>
+        conv.user_id === uid ? !conv.hidden_by_user : !conv.hidden_by_seller
+      )
+      const enriched = await Promise.all(visible.map(async (conv: any) => {
         const { data: listing } = await supabase
           .from('listings')
           .select('title')
@@ -75,7 +81,20 @@ export default function ConversationsPage() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => uid && loadAll(uid))
         .subscribe()
 
-      const onRead = () => uid && loadAll(uid)
+      const onRead = (e: Event) => {
+        // Efface immédiatement la pastille de la conversation lue (sans attendre
+        // l'aller-retour serveur), puis recharge pour rester exact.
+        const convId = (e as CustomEvent).detail?.conversationId
+        if (convId) {
+          setUnreadByConv(prev => {
+            if (!prev[convId]) return prev
+            const next = { ...prev }
+            delete next[convId]
+            return next
+          })
+        }
+        if (uid) loadAll(uid)
+      }
       window.addEventListener('bss-messages-read', onRead)
 
       return () => {
@@ -87,6 +106,34 @@ export default function ConversationsPage() {
     const cleanup = init()
     return () => { cleanup.then(fn => fn?.()) }
   }, [router])
+
+  const deleteConversation = async (convId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!userId || deletingId) return
+    if (!window.confirm(t(lang, 'delete_conversation_confirm'))) return
+
+    setDeletingId(convId)
+    const res = await fetch('/api/conversations/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversationId: convId, userId }),
+    }).catch(() => null)
+
+    if (res?.ok) {
+      setConversations(prev => prev.filter(c => c.id !== convId))
+      setUnreadByConv(prev => {
+        const next = { ...prev }
+        delete next[convId]
+        return next
+      })
+      // Met à jour les pastilles du header / nav.
+      window.dispatchEvent(new CustomEvent('bss-messages-read', { detail: { conversationId: convId } }))
+    } else {
+      alert(lang === 'kr' ? 'Pa kapab efase. Eseye ankor.' : 'Could not delete. Please try again.')
+    }
+    setDeletingId(null)
+  }
 
   if (loading) {
     return (
@@ -134,43 +181,69 @@ export default function ConversationsPage() {
             const initials = (conv.other_id ?? '?')[0].toUpperCase()
 
             return (
-              <Link
-                key={conv.id}
-                href={`/conversations/${conv.id}`}
-                className={`flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 active:bg-gray-100 transition-colors ${unread > 0 ? 'bg-white' : 'bg-white'}`}
-              >
-                {/* Avatar */}
-                <div className="w-11 h-11 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shrink-0 relative">
-                  {initials}
-                  {unread > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white" />
-                  )}
-                </div>
+              <div key={conv.id} className="flex items-center bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                <Link
+                  href={`/conversations/${conv.id}`}
+                  className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0"
+                >
+                  {/* Avatar */}
+                  <div className="w-11 h-11 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold shrink-0 relative">
+                    {initials}
+                    {unread > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white" />
+                    )}
+                  </div>
 
-                {/* Contenu */}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm truncate ${unread > 0 ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>
-                    {conv.listing?.title ?? 'Listing deleted'}
-                  </p>
-                  <p className={`text-sm truncate ${unread > 0 ? 'text-gray-700 font-medium' : 'text-gray-500'}`}>
-                    {conv.last_message || 'New message'}
-                  </p>
-                </div>
+                  {/* Contenu */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm truncate ${unread > 0 ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>
+                      {conv.listing?.title ?? 'Listing deleted'}
+                    </p>
+                    {/* "New message" seulement si non lu ; sinon aperçu du dernier message. */}
+                    {unread > 0 ? (
+                      <p className="text-sm truncate font-semibold" style={{ color: '#003F87' }}>
+                        {t(lang, 'new_message')}
+                      </p>
+                    ) : conv.last_message ? (
+                      <p className="text-sm truncate text-gray-500">{conv.last_message}</p>
+                    ) : null}
+                  </div>
 
-                {/* Heure + badge */}
-                <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <p className="text-xs text-gray-400">
-                    {isRecent
-                      ? new Date(conv.updated_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })
-                      : new Date(conv.updated_at).toLocaleDateString('en', { day: 'numeric', month: 'short' })}
-                  </p>
-                  {unread > 0 && (
-                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                      {unread > 9 ? '9+' : unread}
-                    </span>
+                  {/* Heure + badge */}
+                  <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                    <p className="text-xs text-gray-400">
+                      {isRecent
+                        ? new Date(conv.updated_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })
+                        : new Date(conv.updated_at).toLocaleDateString('en', { day: 'numeric', month: 'short' })}
+                    </p>
+                    {unread > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                        {unread > 9 ? '9+' : unread}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+
+                {/* Suppression manuelle de la conversation */}
+                <button
+                  onClick={(e) => deleteConversation(conv.id, e)}
+                  disabled={deletingId === conv.id}
+                  aria-label={t(lang, 'delete_conversation')}
+                  title={t(lang, 'delete_conversation')}
+                  className="shrink-0 mr-2 w-9 h-9 flex items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                >
+                  {deletingId === conv.id ? (
+                    <span className="text-xs">…</span>
+                  ) : (
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
                   )}
-                </div>
-              </Link>
+                </button>
+              </div>
             )
           })}
         </div>

@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { deleteListingNotifications } from '@/lib/storage-cleanup'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,6 +45,7 @@ export default async function AdminPage() {
     'use server'
     const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
     await client.from('listing_images').delete().eq('listing_id', id)
+    await deleteListingNotifications(client, [id])
     await client.from('listings').delete().eq('id', id)
   }
 
@@ -89,6 +91,10 @@ export default async function AdminPage() {
       await client.from('favorites').delete().in('listing_id', listingIds)
     }
     await client.from('notifications').delete().eq('user_id', id)
+    // Notifications reçues par d'AUTRES utilisateurs à propos des annonces supprimées
+    if (listingIds.length > 0) {
+      await deleteListingNotifications(client, listingIds)
+    }
     await client.from('reports').delete().eq('reporter_id', id)
     await client.from('alerts').delete().eq('user_id', id)
     await client.from('listings').delete().eq('user_id', id)

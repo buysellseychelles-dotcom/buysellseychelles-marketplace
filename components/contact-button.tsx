@@ -39,32 +39,16 @@ export default function ContactButton({
       .eq('listing_id', listingId)
       .eq('user_id', user.id)
       .eq('seller_id', sellerId)
-      .single()
+      .maybeSingle()
 
     if (existing) {
       router.push(`/conversations/${existing.id}`)
       return
     }
 
-    // Créer une nouvelle conversation
-    const { data: newConv, error } = await supabase
-      .from('conversations')
-      .insert({
-        listing_id: listingId,
-        user_id: user.id,
-        seller_id: sellerId,
-        last_message: '',
-        updated_at: new Date().toISOString(),
-      })
-      .select('id')
-      .single()
-
-    if (newConv) {
-      router.push(`/conversations/${newConv.id}`)
-    } else {
-      console.error(error)
-      setLoading(false)
-    }
+    // Pas de conversation existante : on ouvre l'écran de rédaction SANS rien
+    // créer en base. La conversation ne sera insérée qu'à l'envoi du 1er message.
+    router.push(`/conversations/new?listing=${listingId}&seller=${sellerId}`)
   }
 
   return (

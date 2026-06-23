@@ -174,6 +174,17 @@ export const CATEGORY_TREE: TopCat[] = [
     ],
   },
   {
+    id: 'community_group',
+    icon: '🤝',
+    en: 'Community',
+    kr: 'Kominote',
+    // Sub-categories are English-only (no Creole translation): kr mirrors en.
+    subs: [
+      { value: 'wanted',     en: 'Wanted',       kr: 'Wanted' },
+      { value: 'lost_found', en: 'Lost & Found', kr: 'Lost & Found' },
+    ],
+  },
+  {
     id: 'pro_group',
     icon: '🏭',
     en: 'Pro Equipment',
