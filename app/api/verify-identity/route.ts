@@ -60,8 +60,8 @@ export async function POST(req: Request) {
 
       const token = makeVerifyToken(verificationId, userId)
       const q = `vid=${encodeURIComponent(verificationId)}&uid=${encodeURIComponent(userId)}&token=${token}`
-      const confirmUrl = `${SITE_URL}/admin/confirm-id?${q}`
-      const rejectUrl = `${SITE_URL}/admin/reject-id?${q}`
+      const confirmUrl = `${SITE_URL}/verify-id/confirm?${q}`
+      const rejectUrl = `${SITE_URL}/verify-id/reject?${q}`
 
       await fetch('https://api.resend.com/emails', {
         method: 'POST',

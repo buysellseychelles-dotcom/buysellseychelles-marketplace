@@ -30,3 +30,17 @@ export async function isAdminUser(): Promise<boolean> {
   const user = await getAdminUser()
   return !!(user && user.email === process.env.ADMIN_EMAIL)
 }
+
+// Cookie-independent admin check: validates a Supabase access token (JWT) sent
+// by the browser and confirms it belongs to the configured admin account.
+// The browser session lives in localStorage (not cookies), so server routes
+// triggered from email links must authorize via the access token, not cookies.
+export async function isAdminAccessToken(accessToken?: string | null): Promise<boolean> {
+  if (!accessToken) return false
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: { user } } = await supabase.auth.getUser(accessToken)
+  return !!(user && user.email === process.env.ADMIN_EMAIL)
+}

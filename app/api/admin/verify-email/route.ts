@@ -2,24 +2,25 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { applyVerificationDecision, checkVerifyToken } from '@/lib/identity-verification'
 import { REJECT_REASONS } from '@/lib/verify-reasons'
-import { isAdminUser } from '@/lib/admin-auth'
+import { isAdminAccessToken } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Handles both the "Confirm ID" and "Reject ID" actions submitted from the
-// /admin/confirm-id and /admin/reject-id pages. POST-only on purpose: a GET
-// with side effects could be auto-triggered by email link scanners.
+// Handles the "Confirm ID" and "Reject ID" actions from the /verify-id pages.
+// POST-only on purpose: a GET with side effects could be auto-triggered by
+// email link scanners. Authorization is via the admin's Supabase access token
+// (the browser session is in localStorage, not cookies) plus the signed token.
 export async function POST(req: Request) {
   try {
-    // Admin session required (in addition to the signed token).
-    if (!(await isAdminUser())) {
+    const { vid, uid, token, action, reasons, notes, accessToken } = await req.json()
+
+    // Admin session required (validated from the access token, not a cookie).
+    if (!(await isAdminAccessToken(accessToken))) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
-
-    const { vid, uid, token, action, reasons, notes } = await req.json()
 
     if (!checkVerifyToken(vid ?? '', uid ?? '', token ?? '')) {
       return NextResponse.json({ ok: false, error: 'Invalid token' }, { status: 403 })
