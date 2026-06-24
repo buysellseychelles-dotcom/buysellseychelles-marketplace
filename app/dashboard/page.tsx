@@ -60,6 +60,9 @@ export default function DashboardPage() {
   const [verifyStatus, setVerifyStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none')
   const [verifyUploading, setVerifyUploading] = useState(false)
   const verifyRef = useRef<HTMLInputElement>(null)
+  // Synchronous in-flight lock: prevents a double submission (e.g. the file
+  // input firing change twice) from sending two admin emails for one upload.
+  const verifySubmittingRef = useRef(false)
   const [quickEdit, setQuickEdit] = useState<{ id: string; title: string; price: string } | null>(null)
   const [quickEditSaving, setQuickEditSaving] = useState(false)
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null)
@@ -160,7 +163,8 @@ export default function DashboardPage() {
   }
 
   const submitVerification = async (file: File) => {
-    if (!userId) return
+    if (!userId || verifySubmittingRef.current) return
+    verifySubmittingRef.current = true
     setVerifyUploading(true)
     try {
       const ext = file.name.split('.').pop()
@@ -181,6 +185,9 @@ export default function DashboardPage() {
       console.error('Verification upload error:', err)
     } finally {
       setVerifyUploading(false)
+      verifySubmittingRef.current = false
+      // Reset the input so re-selecting the same file fires change again.
+      if (verifyRef.current) verifyRef.current.value = ''
     }
   }
 
