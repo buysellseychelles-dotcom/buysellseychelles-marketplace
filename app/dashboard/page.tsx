@@ -114,12 +114,15 @@ export default function DashboardPage() {
         }
       }
 
-      const { data: verif } = await supabase
-        .from('identity_verifications')
-        .select('status')
-        .eq('user_id', user.id)
-        .maybeSingle()
-      if (verif) setVerifyStatus(verif.status as any)
+      // Read via service-role API so the status persists across reloads
+      // (a direct anon-key read is blocked by RLS and returns null).
+      try {
+        const res = await fetch(`/api/verify-identity?userId=${user.id}`, { cache: 'no-store' })
+        const { status } = await res.json()
+        setVerifyStatus((status ?? 'none') as any)
+      } catch {
+        setVerifyStatus('none')
+      }
 
       setLoading(false)
     }
@@ -670,16 +673,11 @@ export default function DashboardPage() {
               {verifyStatus === 'pending' && (
                 <span className="ml-auto text-[10px] bg-yellow-100 text-yellow-700 font-medium px-2 py-0.5 rounded-full">Under review</span>
               )}
-              {verifyStatus === 'rejected' && (
-                <span className="ml-auto text-[10px] bg-red-100 text-red-600 font-medium px-2 py-0.5 rounded-full">Rejected</span>
-              )}
             </div>
             {verifyStatus === 'none' || verifyStatus === 'rejected' ? (
               <>
                 <p className="text-[11px] text-gray-400 mb-2.5">
-                  {verifyStatus === 'rejected'
-                    ? 'Your document was not accepted. Please submit a clear photo of a valid ID.'
-                    : 'Optionally submit a photo of your national ID or passport to get the 🪪 Verified ID badge on your profile.'}
+                  Optionally submit a photo of your national ID or passport to get the 🪪 Verified ID badge on your profile.
                 </p>
                 <input ref={verifyRef} type="file" accept="image/*" className="hidden"
                   onChange={e => { const f = e.target.files?.[0]; if (f) submitVerification(f) }} />
@@ -696,7 +694,7 @@ export default function DashboardPage() {
           <div className="bg-green-50/60 border border-green-100 rounded-xl p-3 flex items-center gap-2.5">
             <span className="text-base">🪪</span>
             <div>
-              <p className="text-xs font-medium text-green-700">Identity Verified</p>
+              <p className="text-xs font-medium text-green-700">ID Accepted</p>
               <p className="text-[11px] text-green-600">Your ID has been verified. The badge appears on your profile.</p>
             </div>
           </div>

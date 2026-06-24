@@ -10,6 +10,24 @@ const supabase = createClient(
 
 const RESEND_KEY = process.env.RESEND_API_KEY
 
+// Returns the current verification status for a user. Uses the service-role
+// client so the read is not blocked by RLS on identity_verifications (the
+// dashboard's anon-key read silently returned null, which is why the banner
+// reverted to its initial state on every reload).
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const userId = searchParams.get('userId')
+  if (!userId) return NextResponse.json({ status: 'none' })
+
+  const { data } = await supabase
+    .from('identity_verifications')
+    .select('status')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  return NextResponse.json({ status: data?.status ?? 'none' })
+}
+
 export async function POST(req: Request) {
   try {
     const { userId, documentUrl } = await req.json()
