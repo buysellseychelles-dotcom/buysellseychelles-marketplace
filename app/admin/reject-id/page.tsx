@@ -1,103 +1,51 @@
-'use client'
-
-import { Suspense, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { REJECT_REASONS } from '@/lib/verify-reasons'
+import { createClient } from '@supabase/supabase-js'
+import { isAdminUser } from '@/lib/admin-auth'
+import { checkVerifyToken } from '@/lib/identity-verification'
+import RejectClient from './RejectClient'
 
-function RejectForm() {
-  const params = useSearchParams()
-  const vid = params.get('vid') ?? ''
-  const uid = params.get('uid') ?? ''
-  const token = params.get('token') ?? ''
+export const dynamic = 'force-dynamic'
 
-  const [selected, setSelected] = useState<string[]>([])
-  const [notes, setNotes] = useState('')
-  const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
-  const toggle = (reason: string) =>
-    setSelected(prev => (prev.includes(reason) ? prev.filter(r => r !== reason) : [...prev, reason]))
+export default async function RejectIdPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ vid?: string; uid?: string; token?: string }>
+}) {
+  // Admin-only: anyone else (or not logged in) is sent to login.
+  if (!(await isAdminUser())) redirect('/login')
 
-  const submit = async () => {
-    if (!vid || !uid || !token) { setStatus('error'); return }
-    setStatus('sending')
-    try {
-      const res = await fetch('/api/admin/verify-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vid, uid, token, reasons: selected, notes }),
-      })
-      if (!res.ok) throw new Error()
-      setStatus('done')
-    } catch {
-      setStatus('error')
-    }
-  }
+  const { vid = '', uid = '', token = '' } = await searchParams
 
-  if (status === 'done') {
+  if (!checkVerifyToken(vid, uid, token)) {
     return (
-      <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center">
-        <div className="text-4xl mb-3">✅</div>
-        <h1 className="font-bold text-lg mb-2">Rejection sent</h1>
-        <p className="text-sm text-gray-500 mb-5">The seller has been notified by email and invited to submit a new document.</p>
-        <Link href="/admin/verifications" className="inline-block bg-[#003F87] text-white text-sm font-semibold px-5 py-2.5 rounded-xl">
-          Open admin verifications →
-        </Link>
+      <div className="max-w-md mx-auto px-4 py-10">
+        <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center">
+          <div className="text-4xl mb-3">⚠️</div>
+          <h1 className="font-bold text-lg mb-2">Invalid or expired link</h1>
+          <p className="text-sm text-gray-500 mb-5">This rejection link could not be verified. Please use the admin panel instead.</p>
+          <Link href="/admin/verifications" className="inline-block bg-[#003F87] text-white text-sm font-semibold px-5 py-2.5 rounded-xl">
+            Open admin verifications →
+          </Link>
+        </div>
       </div>
     )
   }
 
-  return (
-    <div className="bg-white border border-red-200 rounded-2xl p-6 space-y-4">
-      <div>
-        <h1 className="font-bold text-lg">✗ Reject identity document</h1>
-        <p className="text-sm text-gray-500 mt-1">Select the reason(s) for rejection. The seller will receive them by email.</p>
-      </div>
+  const { data: row } = await supabase
+    .from('identity_verifications')
+    .select('document_url')
+    .eq('id', vid)
+    .maybeSingle()
 
-      <div className="space-y-2">
-        {REJECT_REASONS.map(reason => (
-          <label key={reason} className="flex items-center gap-3 border border-gray-200 rounded-xl px-3.5 py-3 cursor-pointer hover:bg-gray-50">
-            <input
-              type="checkbox"
-              checked={selected.includes(reason)}
-              onChange={() => toggle(reason)}
-              className="w-4 h-4 accent-[#BE0027]"
-            />
-            <span className="text-sm">{reason}</span>
-          </label>
-        ))}
-      </div>
-
-      <textarea
-        value={notes}
-        onChange={e => setNotes(e.target.value)}
-        placeholder="Additional note (optional — shown to the seller)"
-        rows={2}
-        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#BE0027]"
-      />
-
-      {status === 'error' && (
-        <p className="text-sm text-red-600">Could not send. The link may have expired — use the admin panel instead.</p>
-      )}
-
-      <button
-        onClick={submit}
-        disabled={status === 'sending' || selected.length === 0}
-        className="w-full bg-[#BE0027] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#9e0020] disabled:opacity-40"
-      >
-        {status === 'sending' ? 'Sending…' : 'Reject & notify seller'}
-      </button>
-      <p className="text-[11px] text-gray-400 text-center">Pick at least one reason to enable sending.</p>
-    </div>
-  )
-}
-
-export default function RejectIdPage() {
   return (
     <div className="max-w-md mx-auto px-4 py-10">
-      <Suspense fallback={<div className="text-center text-gray-400">Loading…</div>}>
-        <RejectForm />
-      </Suspense>
+      <RejectClient vid={vid} uid={uid} token={token} doc={row?.document_url ?? ''} />
     </div>
   )
 }

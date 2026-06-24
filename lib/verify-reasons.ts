@@ -7,6 +7,7 @@ export const REJECT_REASONS = [
   'Wrong type of ID',
   'Document expired',
   'Poor photo quality',
+  'Other',
 ] as const
 
 export type RejectReason = (typeof REJECT_REASONS)[number]

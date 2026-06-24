@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { applyVerificationDecision, checkVerifyToken } from '@/lib/identity-verification'
 import { REJECT_REASONS } from '@/lib/verify-reasons'
+import { isAdminUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +14,11 @@ const supabase = createClient(
 // with side effects could be auto-triggered by email link scanners.
 export async function POST(req: Request) {
   try {
+    // Admin session required (in addition to the signed token).
+    if (!(await isAdminUser())) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { vid, uid, token, action, reasons, notes } = await req.json()
 
     if (!checkVerifyToken(vid ?? '', uid ?? '', token ?? '')) {
