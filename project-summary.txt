@@ -1,6 +1,6 @@
 ================================================================================
   BUYSELLSEYCHELLES.COM — RÉSUMÉ COMPLET DU PROJET
-  Généré le : 19 juin 2026 — Mis à jour le : 22 juin 2026
+  Généré le : 19 juin 2026 — Mis à jour le : 23 juin 2026
 ================================================================================
 
 
@@ -140,7 +140,8 @@ PAGES TECHNIQUES
 ANNONCES
   ✓ Publication annonce : titre, description*, photos* (min 1, max 3 gratuit / 10 PRO),
     catégorie*, île*, quartier (Mahé), prix (SCR/EUR), prix négociable, urgent,
-    livraison disponible, téléphone (optionnel + toggle masqué)
+    livraison disponible, téléphone* (OBLIGATOIRE à la création + toggle masqué
+    pour le rendre invisible publiquement)
   ✓ Champs de prix conditionnels : pour les catégories "Jobs" (emploi /
     emploi_demande) et "Free & Exchange" (dons / troc), le champ prix ET le
     bouton "Negotiable" sont masqués (post-ad + edit-listing). À l'enregistrement
@@ -205,6 +206,8 @@ SYSTÈME DE MESSAGERIE
   ✓ Notifications push navigateur sur nouveau message
   ✓ Email de notification nouveau message (Resend)
   ✓ Liste de toutes les conversations avec aperçu dernier message
+  ✓ Suppression manuelle d'une conversation depuis /conversations (l'utilisateur
+    peut effacer une conversation de sa liste)
 
 NOTIFICATIONS IN-APP
   ✓ Icône cloche (header desktop + mobile)
@@ -215,6 +218,9 @@ NOTIFICATIONS IN-APP
   ✓ Notification : nouvelle annonce d'un vendeur suivi
   ✓ Notification : avis reçu
   ✓ Notification : nouvelle alerte de recherche
+  ✓ Nettoyage automatique : les notifications liées à une annonce supprimée sont
+    effacées automatiquement (plus de notifications orphelines vers une annonce
+    inexistante)
 
 FAVORIS
   ✓ Bouton ❤️ Ajouter aux favoris sur chaque annonce
@@ -314,15 +320,17 @@ PAGES STATIQUES INFORMATIVES
   ✓ /advertise — réserver une bannière publicitaire (Stripe)
 
 CATÉGORIES (ARBORESCENCE — lib/category-tree.ts)
-  Arborescence à 2 niveaux : 14 catégories principales → sous-catégories.
+  Arborescence à 2 niveaux : 15 catégories principales → sous-catégories.
   Principales : 🚗 Vehicles · 🏡 Real Estate · 📱 Electronics · 🛋️ Home & Garden ·
   👗 Fashion · 🧸 Family · 💼 Jobs · 🔧 Services · ⚽ Sports & Leisure ·
   🐾 Pets & Animals · 🌴 Tourism & Activities · 🎁 Free & Exchange ·
-  🏭 Pro Equipment · 📦 Other.
+  🏭 Pro Equipment · 👥 Community · 📦 Other.
   ✓ NOUVEAU — Catégorie "Family" (🧸 / kr "Fanmiy"), 10 sous-catégories :
     Baby Equipment, Kids Furniture, Baby Clothing, Kids Clothing, Maternity Wear,
     Kids Shoes, Kids Watches & Jewelry, Kids Accessories & Bags, Games & Toys,
     Babysitting. Sous-catégories en anglais uniquement (pas de créole).
+  ✓ NOUVEAU — Catégorie "Community" (👥 / kr "Kominote"), 2 sous-catégories :
+    Wanted, Lost & Found. Sous-catégories en anglais uniquement (pas de créole).
 
 DISTRICTS / QUARTIERS PAR ÎLE (lib/districts.ts — formulaire post-ad & edit-listing)
   Sélecteur de district (optionnel) affiché dynamiquement selon l'île choisie
@@ -356,6 +364,7 @@ SYSTÈME DE LANGUE / TRADUCTION (i18n — lib/i18n.ts)
     français standard maintenue dans la table de traduction.
   ✓ JAMAIS traduits en créole (toujours en anglais, y compris en mode kr) :
     - Le bandeau cookies (cookie banner) reste intégralement en anglais.
+    - Le lien/bouton "Manage cookies" reste toujours en anglais uniquement.
     - TOUTES les sous-catégories du site restent en anglais dans les deux langues
       (kr === en), sans exception, pour éviter toute traduction approximative.
 
@@ -627,5 +636,5 @@ DISPUTE
 
 
 ================================================================================
-  FIN DU DOCUMENT — buysellseychelles.com — 22 juin 2026
+  FIN DU DOCUMENT — buysellseychelles.com — 23 juin 2026
 ================================================================================

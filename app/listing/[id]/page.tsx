@@ -110,7 +110,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const { data: profile } = await supabaseAdmin
     .from('profiles')
-    .select('full_name, island, verified, is_pro, avatar_url, whatsapp, online, show_avatar_in_listings, phone_hidden, created_at, last_active_at')
+    .select('full_name, island, verified, id_verified, is_pro, avatar_url, whatsapp, online, show_avatar_in_listings, phone_hidden, created_at, last_active_at')
     .eq('id', listing.user_id)
     .maybeSingle()
 
@@ -165,7 +165,12 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     : null
 
   const shareUrl = `${SITE_URL}/listing/${canonicalSlug}`
-  const priceLabel = formatPrice(listing.price, listing.currency)
+  // Community listings (Wanted / Lost & Found) have no price : on affiche
+  // le libellé de la sous-catégorie à la place de la ligne prix.
+  const isCommunity = ['wanted', 'lost_found'].includes(listing.category)
+  const priceLabel = isCommunity
+    ? (CATEGORY_LABELS[listing.category]?.[lang] ?? listing.category)
+    : formatPrice(listing.price, listing.currency)
   const contactPhone = (listing.phone_hidden || profile?.phone_hidden) ? null : (listing.phone || profile?.whatsapp || null)
   const cleanPhone = contactPhone ? contactPhone.replace(/\D/g, '') : null
 
@@ -257,6 +262,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <p className="text-sm font-semibold text-gray-800">{sellerDisplayName || t(lang, 'seller')}</p>
             {profile?.is_pro && <span className="bg-yellow-400 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">⭐ PRO</span>}
             {profile?.verified && <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">✓</span>}
+            {(profile as any)?.id_verified && <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">🪪 ID Verified</span>}
           </div>
           {sellerAvgRating !== null && (
             <Link href={`/seller/${listing.user_id}`} className="flex items-center gap-1.5 mt-0.5 w-fit">

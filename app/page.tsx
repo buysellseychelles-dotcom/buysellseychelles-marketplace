@@ -11,13 +11,21 @@ import BannerCarousel from '@/components/banner-carousel'
 import TimeAgo from '@/components/time-ago'
 import { formatPrice } from '@/lib/utils'
 import { listingHref } from '@/lib/slug'
-import { t, type Lang } from '@/lib/i18n'
+import { t, CATEGORY_LABELS, type Lang } from '@/lib/i18n'
 import { RecentlyViewedSection } from '@/components/recently-viewed'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+
+// Annonces Community (Wanted / Lost & Found) : pas de prix → on affiche le
+// libellé de la sous-catégorie à la place. Renvoie null pour toute autre annonce.
+const COMMUNITY_CATS = ['wanted', 'lost_found']
+const communityLabel = (item: any, lang: Lang): string | null =>
+  COMMUNITY_CATS.includes(item.category)
+    ? (CATEGORY_LABELS[item.category]?.[lang] ?? item.category)
+    : null
 
 type SearchParams = {
   page?: string; category?: string; q?: string; island?: string
@@ -87,7 +95,7 @@ const getHomeData = unstable_cache(
       HOME_SECTIONS.map(s => {
         const cats = CATEGORY_GROUP_MAP[s.value] ?? [s.value]
         const q = supabase.from('listings')
-          .select('id,title,price,currency,location,status,created_at,user_id,boosted,boost_expires_at,listing_images(image_url)')
+          .select('id,title,price,currency,location,category,status,created_at,user_id,boosted,boost_expires_at,listing_images(image_url)')
           .not('status', 'in', '("sold","expired")')
           .order('boosted', { ascending: false })  // featured listings first
           .order('created_at', { ascending: false })
@@ -353,7 +361,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Search
                 <div className="p-2">
                   <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{item.title}</p>
                   <p className="text-sm font-bold mt-1" style={{ color: '#003F87' }}>
-                    {formatPrice(item.price, item.currency)}
+                    {communityLabel(item, lang) ?? formatPrice(item.price, item.currency)}
                   </p>
                   <p className="text-[10px] text-gray-400 mt-0.5"><TimeAgo date={item.created_at} /></p>
                 </div>
@@ -410,9 +418,10 @@ function ListingCard({ item, now, lang, sellerPro = false }: { item: any; now: D
         <p className="text-sm font-medium line-clamp-2 text-gray-800 leading-snug">{item.title}</p>
         <p className="text-xs text-gray-400 mt-1 line-clamp-1">📍 {item.location || 'Seychelles'}</p>
         <p className="text-sm font-bold mt-1" style={{ color: '#003F87' }}>
-          {item.price_negotiable
-            ? <span className="text-orange-600">{t(lang, 'negotiable')}</span>
-            : formatPrice(item.price, item.currency)}
+          {communityLabel(item, lang)
+            ?? (item.price_negotiable
+              ? <span className="text-orange-600">{t(lang, 'negotiable')}</span>
+              : formatPrice(item.price, item.currency))}
         </p>
         <p className="text-[11px] text-gray-400 mt-0.5"><TimeAgo date={item.created_at} /></p>
       </div>

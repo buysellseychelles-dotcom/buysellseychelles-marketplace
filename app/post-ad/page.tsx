@@ -767,7 +767,7 @@ export default function PostAdPage() {
         {errors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-1.5">
             <p className="text-xs font-semibold text-red-700 mb-1">
-              {lang === 'kr' ? 'Korize avan ou kontinie :' : 'Please fix the following:'}
+              {lang === 'kr' ? 'Korize avan ou kontiyen :' : 'Please fix the following:'}
             </p>
             {errors.map((e, i) => (
               <p key={i} className="text-sm text-red-700 flex items-start gap-1.5">

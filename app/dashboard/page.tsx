@@ -65,7 +65,6 @@ export default function DashboardPage() {
   const verifySubmittingRef = useRef(false)
   const [quickEdit, setQuickEdit] = useState<{ id: string; title: string; price: string } | null>(null)
   const [quickEditSaving, setQuickEditSaving] = useState(false)
-  const [duplicatingId, setDuplicatingId] = useState<string | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -203,7 +202,7 @@ export default function DashboardPage() {
   }
 
   const toggleStatus = async (id: string, current: string) => {
-    const next = current === 'sold' ? 'available' : current === 'reserved' ? 'sold' : 'reserved'
+    const next = current === 'sold' ? 'available' : 'sold'
     await supabase.from('listings').update({ status: next }).eq('id', id)
     setListings(prev => prev.map(l => l.id === id ? { ...l, status: next } : l))
   }
@@ -220,43 +219,6 @@ export default function DashboardPage() {
     ))
     setQuickEditSaving(false)
     setQuickEdit(null)
-  }
-
-  const duplicateListing = async (item: Listing) => {
-    if (!userId || duplicatingId) return
-    setDuplicatingId(item.id)
-    const { data: full } = await supabase.from('listings').select('*').eq('id', item.id).single()
-    if (!full) { setDuplicatingId(null); return }
-    const { data: newL } = await supabase.from('listings').insert({
-      title: `Copy of ${full.title}`,
-      description: full.description,
-      price: full.price,
-      price_negotiable: full.price_negotiable,
-      currency: full.currency,
-      location: full.location,
-      category: full.category,
-      phone: full.phone,
-      urgent: false,
-      delivery: full.delivery,
-      status: 'available',
-      user_id: userId,
-      make: full.make, model: full.model, year: full.year,
-      mileage: full.mileage, fuel_type: full.fuel_type, gearbox: full.gearbox,
-      condition: full.condition, property_type: full.property_type,
-      bedrooms: full.bedrooms, bathrooms: full.bathrooms, area_sqm: full.area_sqm,
-      furnished: full.furnished, tenure: full.tenure, contract_type: full.contract_type,
-      salary: full.salary, boat_type: full.boat_type,
-    }).select().single()
-    if (newL) {
-      const { data: imgs } = await supabase.from('listing_images').select('image_url').eq('listing_id', item.id)
-      if (imgs?.length) {
-        await Promise.all(imgs.map((img: any) =>
-          supabase.from('listing_images').insert({ listing_id: newL.id, image_url: img.image_url })
-        ))
-      }
-      setListings(prev => [{ ...newL, listing_images: imgs ?? [] } as any, ...prev])
-    }
-    setDuplicatingId(null)
   }
 
   const renewListing = async (id: string) => {
@@ -628,11 +590,6 @@ export default function DashboardPage() {
                       {t(lang, 'edit_btn')}
                     </Link>
                     <div className="w-px bg-gray-100" />
-                    <button onClick={() => duplicateListing(item)} disabled={duplicatingId === item.id}
-                      className="flex-1 py-2.5 text-center text-xs text-gray-500 font-medium hover:bg-gray-50 min-w-[60px] disabled:opacity-40">
-                      {duplicatingId === item.id ? '...' : '⧉ Copy'}
-                    </button>
-                    <div className="w-px bg-gray-100" />
                     {item.status === 'expired' || (item.expires_at && Math.ceil((new Date(item.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) <= 7) ? (
                       <>
                         <button
@@ -651,7 +608,7 @@ export default function DashboardPage() {
                             item.status === 'reserved' ? 'text-red-500 hover:bg-red-50' :
                             'text-amber-600 hover:bg-amber-50'
                           }`}>
-                          {item.status === 'sold' ? t(lang, 'mark_available') : item.status === 'reserved' ? t(lang, 'mark_sold') : t(lang, 'mark_reserved')}
+                          {item.status === 'sold' ? t(lang, 'mark_available') : t(lang, 'mark_sold')}
                         </button>
                         <div className="w-px bg-gray-100" />
                       </>
