@@ -5,12 +5,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { useLang } from '@/lib/lang-context'
-import { t } from '@/lib/i18n'
+import { t, CATEGORY_LABELS } from '@/lib/i18n'
 import { formatPrice } from '@/lib/utils'
 import { listingHref } from '@/lib/slug'
 
 const KEY = 'bss_recently_viewed'
 const MAX = 10
+
+// Annonces sans prix — Community (Wanted / Lost & Found) et Jobs (Job Offers /
+// Job Wanted) : pas de prix → on affiche le libellé de la sous-catégorie à la
+// place. Renvoie null pour toute autre annonce.
+const NO_PRICE_CATS = ['wanted', 'lost_found', 'emploi', 'emploi_demande']
+const noPriceLabel = (item: any, lang: 'en' | 'kr'): string | null =>
+  NO_PRICE_CATS.includes(item.category)
+    ? (CATEGORY_LABELS[item.category]?.[lang] ?? item.category)
+    : null
 
 export function RecentlyViewedTracker({ id }: { id: string }) {
   useEffect(() => {
@@ -30,7 +39,7 @@ export function RecentlyViewedSection() {
     if (ids.length === 0) return
     supabase
       .from('listings')
-      .select('id,title,price,currency,listing_images(image_url)')
+      .select('id,title,price,currency,category,listing_images(image_url)')
       .in('id', ids)
       .not('status', 'in', '("sold","expired")')
       .then(({ data }) => {
@@ -63,7 +72,7 @@ export function RecentlyViewedSection() {
             <div className="p-2">
               <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{item.title}</p>
               <p className="text-sm font-bold mt-0.5" style={{ color: '#003F87' }}>
-                {formatPrice(item.price, item.currency)}
+                {noPriceLabel(item, lang) ?? formatPrice(item.price, item.currency)}
               </p>
             </div>
           </Link>
