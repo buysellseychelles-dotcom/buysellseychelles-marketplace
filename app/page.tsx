@@ -19,11 +19,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-// Annonces Community (Wanted / Lost & Found) : pas de prix → on affiche le
-// libellé de la sous-catégorie à la place. Renvoie null pour toute autre annonce.
-const COMMUNITY_CATS = ['wanted', 'lost_found']
-const communityLabel = (item: any, lang: Lang): string | null =>
-  COMMUNITY_CATS.includes(item.category)
+// Annonces sans prix — Community (Wanted / Lost & Found) et Jobs (Job Offers /
+// Job Wanted) : pas de prix → on affiche le libellé de la sous-catégorie à la
+// place. Renvoie null pour toute autre annonce.
+const NO_PRICE_CATS = ['wanted', 'lost_found', 'emploi', 'emploi_demande']
+const noPriceLabel = (item: any, lang: Lang): string | null =>
+  NO_PRICE_CATS.includes(item.category)
     ? (CATEGORY_LABELS[item.category]?.[lang] ?? item.category)
     : null
 
@@ -361,7 +362,7 @@ export default async function HomePage({ searchParams }: { searchParams?: Search
                 <div className="p-2">
                   <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{item.title}</p>
                   <p className="text-sm font-bold mt-1" style={{ color: '#003F87' }}>
-                    {communityLabel(item, lang) ?? formatPrice(item.price, item.currency)}
+                    {noPriceLabel(item, lang) ?? formatPrice(item.price, item.currency)}
                   </p>
                   <p className="text-[10px] text-gray-400 mt-0.5"><TimeAgo date={item.created_at} /></p>
                 </div>
@@ -418,7 +419,7 @@ function ListingCard({ item, now, lang, sellerPro = false }: { item: any; now: D
         <p className="text-sm font-medium line-clamp-2 text-gray-800 leading-snug">{item.title}</p>
         <p className="text-xs text-gray-400 mt-1 line-clamp-1">📍 {item.location || 'Seychelles'}</p>
         <p className="text-sm font-bold mt-1" style={{ color: '#003F87' }}>
-          {communityLabel(item, lang)
+          {noPriceLabel(item, lang)
             ?? (item.price_negotiable
               ? <span className="text-orange-600">{t(lang, 'negotiable')}</span>
               : formatPrice(item.price, item.currency))}

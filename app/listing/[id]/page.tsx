@@ -165,10 +165,10 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     : null
 
   const shareUrl = `${SITE_URL}/listing/${canonicalSlug}`
-  // Community listings (Wanted / Lost & Found) have no price : on affiche
-  // le libellé de la sous-catégorie à la place de la ligne prix.
-  const isCommunity = ['wanted', 'lost_found'].includes(listing.category)
-  const priceLabel = isCommunity
+  // Annonces sans prix — Community (Wanted / Lost & Found) et Jobs (Job Offers /
+  // Job Wanted) : on affiche le libellé de la sous-catégorie à la place du prix.
+  const noPriceCats = ['wanted', 'lost_found', 'emploi', 'emploi_demande']
+  const priceLabel = noPriceCats.includes(listing.category)
     ? (CATEGORY_LABELS[listing.category]?.[lang] ?? listing.category)
     : formatPrice(listing.price, listing.currency)
   const contactPhone = (listing.phone_hidden || profile?.phone_hidden) ? null : (listing.phone || profile?.whatsapp || null)
