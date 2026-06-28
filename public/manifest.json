@@ -1,16 +1,22 @@
 {
   "name": "BuySellSeychelles",
   "short_name": "BuySell",
-  "description": "Le marketplace des Seychelles – Achetez et vendez sur Mahé, Praslin et La Digue",
+  "description": "The Seychelles marketplace – Buy and sell on Mahé, Praslin and La Digue",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "lang": "fr",
+  "theme_color": "#0b3d91",
+  "lang": "en",
   "categories": ["shopping", "lifestyle"],
   "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
@@ -21,7 +27,13 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/apple-icon.png",
@@ -32,30 +44,22 @@
   ],
   "shortcuts": [
     {
-      "name": "Publier une annonce",
-      "short_name": "Publier",
+      "name": "Post an ad",
+      "short_name": "Post",
       "url": "/post-ad",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Mes messages",
+      "name": "My messages",
       "short_name": "Messages",
       "url": "/conversations",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Mon tableau de bord",
+      "name": "My dashboard",
       "short_name": "Dashboard",
       "url": "/dashboard",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow"
     }
   ]
 }
