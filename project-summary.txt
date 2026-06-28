@@ -1,6 +1,6 @@
 ================================================================================
   BUYSELLSEYCHELLES.COM — RÉSUMÉ COMPLET DU PROJET
-  Généré le : 19 juin 2026 — Mis à jour le : 23 juin 2026
+  Généré le : 19 juin 2026 — Mis à jour le : 26 juin 2026
 ================================================================================
 
 
@@ -163,7 +163,11 @@ ANNONCES
   ✓ Suppression annonce avec nettoyage automatique photos Supabase Storage
   ✓ Expiration automatique à 60 jours (cron) — email J-7 + email jour J
   ✓ Renouvellement annonce (bouton dashboard → remet 60 jours)
-  ✓ Marquer vendu / Réserver / Disponible depuis le dashboard
+  ✓ Marquer vendu / Disponible depuis le dashboard (toggle Sold ⇄ Available).
+    Les anciens boutons "Copy" (dupliquer l'annonce) et "Réserver" ont été RETIRÉS
+    des cartes d'annonces du dashboard ; actions restantes : View · Stats · Edit ·
+    Renew (ou Mark sold/available) · Delete. Le statut "reserved" reste affiché si
+    une annonce le porte déjà (donnée existante) mais n'est plus assignable depuis l'UI.
   ✓ Marquer vendu depuis le chat (bouton ✓ Sold côté vendeur)
   ✓ Stats par annonce : vues, CTR, favoris, messages, jours en ligne
   ✓ Photos réordonnables par glisser-déposer (post-ad + edit-listing)
@@ -173,6 +177,8 @@ ANNONCES
 RECHERCHE ET FILTRES
   ✓ Recherche plein texte (titre + description)
   ✓ Filtres : catégorie, île, quartier, fourchette de prix, tri (récent / prix / populaire)
+  ✓ Tri par défaut = "récent" (les annonces les plus récentes remontent en tête,
+    ce qui fait naturellement descendre les annonces plus anciennes)
   ✓ Filtres adaptatifs par catégorie (voiture : carburant, boîte, km ; immo : chambres, tenure…)
   ✓ Vue liste + Vue carte (Leaflet/OpenStreetMap)
   ✓ Pagination
@@ -190,6 +196,8 @@ UTILISATEURS ET PROFIL
   ✓ Inscription email/password + OAuth Google
   ✓ Confirmation email (lien Supabase via Resend)
   ✓ Réinitialisation mot de passe
+  ✓ Password visibility toggle sur /login : icône œil (ouvert / barré) dans le champ
+    mot de passe pour afficher ou masquer la saisie (connexion + inscription)
   ✓ Dashboard : avatar (upload + compression), nom, WhatsApp, île, bio
   ✓ Barre de progression de complétion de profil
   ✓ Badge ✓ Verified automatique (profil 100% complet)
@@ -257,6 +265,9 @@ PAGE ANNONCE DÉTAILLÉE
   ✓ Affichage numéro de téléphone (si non masqué)
   ✓ Bouton Signaler l'annonce (6 raisons)
   ✓ Carte vendeur encadrée : nom, ville, Member since, Follow + View profile
+  ✓ Badge "🪪 ID Verified" affiché directement dans le bandeau profil vendeur de la
+    page annonce (+ badge ✓ Verified profil complet), SANS avoir à cliquer sur
+    "View profile" — visible immédiatement à côté du nom du vendeur
   ✓ Badge Boosted, Urgent, Prix négociable, Livraison disponible
   ✓ Fil d'Ariane JSON-LD (SEO)
   ✓ OpenGraph / Twitter Card pour partage réseaux sociaux
