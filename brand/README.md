@@ -13,8 +13,9 @@ and the **future mobile app**.
 
 ## Logo specs
 
-- Rounded square (`rx = 110 / 500 ≈ 22%`), blue field `#0b3d91`.
-- Seychelles flag diagonal fan: `#fcd116` / `#d62828` / `#ffffff` / `#0a7d3e`.
+- Rounded square (`rx = 110 / 500 ≈ 22%`), blue field `#003F87`.
+- Seychelles flag diagonal fan: `#FCD116` / `#BE0027` / `#FFFFFF` / `#007A3D`
+  (official brand palette — see `memory/design-system.md`).
 - "BS" wordmark in white with a black outline (Arial Black / Impact, weight 900).
 
 ## Regenerating assets
@@ -28,9 +29,12 @@ node brand/generate-icons.cjs
 This writes to `../public/`:
 
 - `icon-192.png`, `icon-512.png` — PWA icons + push-notification icon
+- `icon-maskable-512.png` (512) — Android adaptive/maskable icon (logo in safe zone on `#003F87`)
 - `apple-icon.png` (180) — iOS home-screen icon
 - `icon-light-32x32.png`, `icon-dark-32x32.png`, `favicon-32.png` — favicons
 - `icon.svg`, `logo.svg`, `brand/logo.svg` — SVG copies served by the web app
+- `splash/apple-splash-*.png` (11 sizes) — iOS launch screens: Seychelles hero
+  gradient (135°) + centered logo. Device list kept in sync with `app/layout.tsx`.
 - `og-image.png` (1200×630) — social share image (Open Graph / Twitter)
 - `logo-email.png` (240) — logo embedded in transactional emails (PNG because
   email clients like Gmail do not render SVG)

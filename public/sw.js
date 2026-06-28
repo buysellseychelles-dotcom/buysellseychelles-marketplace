@@ -1,16 +1,28 @@
-const CACHE = 'bss-v2'
+const CACHE = 'bss-v3'
 
 const PRECACHE = [
-  '/',
-  '/offline',
+  '/',          // Home
+  '/login',     // Connexion
+  '/dashboard', // Tableau de bord
+  '/offline',   // Page de repli hors-ligne
+  '/logo.svg',  // Logo affiché sur la page offline
   '/icon-192.png',
   '/icon-512.png',
 ]
 
-// Installation : on précache les ressources essentielles
+// Installation : on précache les ressources essentielles.
+// On met chaque URL en cache individuellement pour qu'une ressource
+// indisponible (ex. /dashboard qui redirige) ne fasse pas échouer
+// toute l'installation du service worker.
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => Promise.all(
+        PRECACHE.map(url =>
+          c.add(url).catch(err => console.log('Precache skipped:', url, err))
+        )
+      ))
+      .then(() => self.skipWaiting())
   )
 })
 
@@ -40,7 +52,12 @@ self.addEventListener('fetch', (e) => {
         }
         return res
       })
-      .catch(() => caches.match(e.request).then(cached => cached || caches.match('/offline')))
+      .catch(() => caches.match(e.request).then(cached => {
+        if (cached) return cached
+        // Pour une navigation de page, on affiche la page de repli hors-ligne
+        if (e.request.mode === 'navigate') return caches.match('/offline')
+        return undefined
+      }))
   )
 })
 

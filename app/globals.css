@@ -46,3 +46,36 @@
     font-family: system-ui, sans-serif;
   }
 }
+
+/* === EXPÉRIENCE MOBILE / PWA ===
+   Règles placées HORS de @layer pour passer devant les utilitaires Tailwind
+   (ex. text-sm sur un input) et garantir le comportement attendu sur mobile. */
+
+/* Supprime le flash bleu (tap highlight) au toucher sur iOS/Android */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pas d'ajustement automatique de la taille du texte par iOS (paysage) */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Empêche le zoom automatique d'iOS au focus d'un champ : la police doit faire
+   au moins 16px. Limité au mobile pour ne rien changer au design desktop. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Un champ amené dans la vue (focus + clavier virtuel) ne doit pas rester collé
+   sous le header sticky ni au ras du clavier. */
+input,
+textarea,
+select {
+  scroll-margin-top: 80px;
+  scroll-margin-bottom: 80px;
+}
