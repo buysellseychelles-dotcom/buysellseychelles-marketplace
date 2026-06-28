@@ -1,6 +1,6 @@
 ================================================================================
   BUYSELLSEYCHELLES.COM — RÉSUMÉ COMPLET DU PROJET
-  Généré le : 19 juin 2026 — Mis à jour le : 26 juin 2026
+  Généré le : 19 juin 2026 — Mis à jour le : 28 juin 2026
 ================================================================================
 
 
@@ -57,7 +57,8 @@ SERVICES TIERS
   - Anti-spam    : Google reCAPTCHA v2 sur le formulaire de contact
   - Push notifs  : Web Push VAPID (web-push library) — notifications navigateur
   - Maps         : OpenStreetMap + Leaflet (geocodage Seychelles pré-défini)
-  - PWA          : next-pwa, manifest.json, service worker network-first
+  - PWA          : manifest.json + service worker manuel (public/sw.js, network-first)
+                   enregistré dans app/layout.tsx — pas de dépendance next-pwa
 
 INFRA / DEVOPS
   - CI/CD        : Vercel CLI (déploiement : NODE_TLS_REJECT_UNAUTHORIZED=0 npx vercel --prod)
@@ -284,6 +285,39 @@ ADMINISTRATION
   ✓ Analytics : vues totales, annonces actives, nouveaux utilisateurs
   ✓ Activation/désactivation boost manuellement
 
+VÉRIFICATION D'IDENTITÉ (Identity Verification) — PROCESSUS COMPLET
+  Workflow complet de bout en bout (soumission → décision admin → notification
+  vendeur), fonctionnel et en production.
+  ✓ Soumission : depuis le bandeau /dashboard, le vendeur upload une photo de sa
+    pièce (CNI ou passeport). Le document est stocké, le statut passe à "pending".
+  ✓ Email admin → buysellseychelles@gmail.com à chaque soumission, contenant :
+    aperçu du document + lien "View document", et DEUX boutons
+    d'action en un clic : "✓ Confirm ID" et "✗ Reject ID".
+  ✓ Chaque bouton ouvre une PAGE INTERMÉDIAIRE SÉCURISÉE (admin uniquement) :
+    - URLs /verify-id/confirm et /verify-id/reject, protégées par un token HMAC
+      signé (verificationId + userId, non rejouable/forgeable) ET la nécessité
+      d'être connecté en tant qu'administrateur (sinon écran "Admins only" 401).
+  ✓ "Confirm ID" : la page affiche le document, puis confirmation → active le badge
+    "🪪 ID Verified" sur le profil /seller ET directement sur la page annonce
+    (profiles.id_verified = true) + email automatique au vendeur confirmant
+    l'acceptation ("Your identity has been verified").
+  ✓ "Reject ID" : la page intermédiaire propose le choix du/des motif(s) (cases) :
+    Document unreadable (illisible), Wrong type of ID (mauvaise pièce),
+    Document expired (expirée), Poor photo quality (mauvaise qualité), Other (autre,
+    avec note libre obligatoire) → email automatique au vendeur avec le(s) motif(s)
+    et l'invitation à re-soumettre un nouveau document.
+  ✓ 4 ÉTATS PERSISTANTS en base (table identity_verifications, statut par user) :
+    none (non soumis) · pending (en attente) · approved (accepté) · rejected (refusé).
+  ✓ Bandeau /dashboard adaptatif selon l'état :
+    - none / rejected → formulaire d'upload ("📤 Upload ID document")
+    - pending        → "Under review" (badge jaune), 24–48 h, AUCUN bouton
+    - approved       → "ID Accepted" (encart vert permanent, plus de formulaire)
+  ✓ Décision partagée (applyVerificationDecision) par le panneau admin
+    /admin/verifications ET les liens email → les deux restent synchronisés.
+  ✓ Email reçu en un seul exemplaire : double envoi corrigé (garde anti
+    double-soumission côté client + lecture du statut via service-role pour éviter
+    que le bandeau ne se réinitialise à chaque rechargement et relance l'envoi).
+
 SÉCURITÉ ET ANTI-ABUS
   ✓ RLS Supabase sur toutes les tables (Row Level Security)
   ✓ Rate limiting sur le formulaire de contact (3/h/IP)
@@ -302,13 +336,86 @@ SEO ET PERFORMANCE
   ✓ Google Analytics 4
   ✓ Sentry error monitoring
 
-PWA
-  ✓ manifest.json (installable sur Android/iOS)
-  ✓ Service Worker network-first (cache offline)
-  ✓ Page /offline branded
-  ✓ Prompt d'installation Android (bannière native)
-  ✓ Instructions iOS (Share → Add to Home Screen)
-  ✓ Notifications push VAPID (messages, avis, alertes)
+PWA — APPLICATION WEB PROGRESSIVE (état final, validée 28 juin 2026)
+  Statut : PWA installable et fonctionnelle, 100% opérationnelle sur Android,
+  iOS et desktop. Toutes les corrections PWA ont été appliquées et vérifiées.
+
+  MANIFEST (public/manifest.json)
+  ✓ name "BuySellSeychelles", short_name "BuySell", description EN
+  ✓ display "standalone", orientation "portrait", lang "en", scope "/", start_url "/"
+  ✓ theme_color + background_color = #003F87 (bleu Seychelles, cohérent avec splash)
+  ✓ categories : ["shopping", "lifestyle"]
+  ✓ Lié dans les metadata Next.js (app/layout.tsx → metadata.manifest = '/manifest.json')
+  ✓ Shortcuts (menu d'app long-press / clic droit) : Post an ad → /post-ad,
+    My messages → /conversations, My dashboard → /dashboard
+  ✓ Screenshots (aperçu type "store" dans la fenêtre d'install Chrome/Android) :
+    captures RÉELLES générées via Playwright sur le build de prod (bandeaux
+    cookies/install neutralisés, annonces réelles chargées), dans /public/screenshots/ —
+    mobile-home + mobile-search (form_factor narrow, 1170×2532),
+    desktop-home (form_factor wide, 1920×1200)
+
+  ICÔNES (toutes présentes dans /public, toutes référencées)
+  ✓ Toutes les tailles générées depuis le VRAI logo BuySellSeychelles (pas de
+    placeholder) — rendu net sur écran d'accueil Android/iOS et au lancement
+  ✓ icon.svg          — vectoriel, sizes "any" (purpose any)
+  ✓ icon-192.png      — 192×192 (purpose any, utilisé aussi par les shortcuts et push)
+  ✓ icon-512.png      — 512×512 (purpose any)
+  ✓ icon-maskable-512.png — 512×512 (purpose maskable, icône adaptative Android)
+  ✓ apple-icon.png    — 180×180 (apple-touch-icon iOS)
+  ✓ Splash screens iOS générés (/public/splash/*) + balises apple appropriées
+    (appleWebApp capable + status bar) dans app/layout.tsx
+  ✓ Splash screen aux couleurs du site : gradient diagonal Seychelles
+    (bleu #003F87 → jaune → rouge → vert) avec le logo BS centré ; couleur de
+    fond #003F87 cohérente avec theme_color / background_color du manifest
+  ✓ Favicons clair/sombre (icon-light-32x32.png / icon-dark-32x32.png)
+
+  BANDEAU NAVIGATION MOBILE (components/mobile-nav.tsx — visible en PWA)
+  ✓ Barre fixe en bas, 5 emplacements : Home · Saved · [+ Post central surélevé] ·
+    Messages · Me (libellés traduits EN/Kreol via i18n)
+  ✓ Optimisé pour iPhone : hauteur min 74px, icônes 27px et libellés 13px (lisibles),
+    et surtout paddingBottom = max(12px, env(safe-area-inset-bottom)) → la barre
+    ne passe plus sous la barre gestuelle / le notch home des iPhone récents
+  ✓ Pastilles rouges de non-lus (messages + notifications) en temps réel
+  ✓ Masquée sur /login et /auth/* ; items renvoyant vers /login si non connecté
+
+  SERVICE WORKER (public/sw.js — cache "bss-v3")
+  ✓ Enregistré au chargement via script inline dans app/layout.tsx (window load)
+  ✓ Stratégie network-first avec repli cache, et page /offline en repli de navigation
+  ✓ Precache résilient : chaque URL essentielle (/, /login, /dashboard, /offline,
+    /logo.svg, /icon-192.png, /icon-512.png) est ajoutée individuellement —
+    une ressource indisponible (ex. /dashboard qui redirige) ne fait plus échouer
+    toute l'installation du SW (correctif clé)
+  ✓ Activation : nettoyage automatique des anciens caches (versions != bss-v3)
+  ✓ skipWaiting + clients.claim → mise à jour immédiate du SW sans rechargement manuel
+  ✓ Exclusions correctes du cache : requêtes non-GET, /api/* et supabase ignorées
+    (jamais de réponses dynamiques/authentifiées servies depuis le cache)
+  ✓ Push : handler 'push' (showNotification : titre, body, icône, badge, vibration)
+  ✓ Clic notification : focus de l'onglet existant si ouvert, sinon openWindow
+
+  MODE OFFLINE
+  ✓ Page /offline brandée servie automatiquement lors d'une navigation hors-ligne
+  ✓ Pages et assets déjà visités restent consultables hors-ligne (mise en cache
+    au fil de l'eau des réponses HTML/assets réussies)
+
+  INSTALLATION
+  ✓ Capture précoce de beforeinstallprompt (script <head>) → l'événement n'est plus
+    perdu quand Chrome le déclenche avant le montage de React (correctif clé)
+  ✓ Bannière d'installation (components/install-prompt.tsx) :
+    - Android/Chrome : bouton "Install" déclenchant le prompt natif
+    - iOS Safari : instructions manuelles (⬆ Share → Add to Home Screen)
+    - Masquée si déjà installée (standalone) ou refusée (sessionStorage), event
+      appinstalled géré
+
+  NOTIFICATIONS PUSH
+  ✓ Web Push VAPID (messages, avis, alertes, nouvelles annonces) via le SW
+  ✓ Enregistrement / permission gérés par components/push-init.tsx
+
+APPLICATION NATIVE (React Native) — PHASE ULTÉRIEURE
+  La plateforme est actuellement distribuée comme PWA installable (suffisante pour
+  l'usage mobile : installation écran d'accueil, offline, push). Une application
+  native React Native (publication sur l'App Store iOS et le Google Play Store)
+  est PRÉVUE DANS UNE PHASE ULTÉRIEURE — non démarrée à ce jour. Elle réutilisera
+  les routes API et l'authentification Supabase existantes.
 
 BOOST / PROMOTION
   ✓ Boost annonce via Stripe (intégration fonctionnelle)
@@ -458,7 +565,10 @@ VERCEL ANALYTICS
      envoie les notifications in-app mais pas encore d'email aux abonnés
   ⏳ Page /trending : affiche des annonces mais l'algorithme de ranking peut
      être affiné (crons de recompute-ranking en place)
-  ⏳ Vérification identité admin : workflow partiel sur /admin/verifications
+  ✓ Vérification identité : workflow COMPLET (voir section "VÉRIFICATION
+     D'IDENTITÉ" ci-dessus) — soumission, email admin avec actions Confirm/Reject,
+     pages intermédiaires sécurisées, badge + emails vendeur, 4 états persistants.
+     Panneau /admin/verifications également disponible en complément des liens email.
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -647,5 +757,5 @@ DISPUTE
 
 
 ================================================================================
-  FIN DU DOCUMENT — buysellseychelles.com — 23 juin 2026
+  FIN DU DOCUMENT — buysellseychelles.com — 28 juin 2026
 ================================================================================
