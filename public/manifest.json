@@ -61,5 +61,28 @@
       "url": "/dashboard",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Browse listings across the Seychelles"
+    },
+    {
+      "src": "/screenshots/mobile-search.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Explore by category"
+    },
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1920x1200",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "BuySellSeychelles on desktop"
+    }
   ]
 }
