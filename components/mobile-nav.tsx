@@ -11,7 +11,7 @@ const BLUE = '#003F87'
 
 function IcoSearch() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="7" />
       <line x1="16.5" y1="16.5" x2="22" y2="22" />
     </svg>
@@ -19,21 +19,21 @@ function IcoSearch() {
 }
 function IcoHeart({ filled }: { filled: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="27" height="27" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   )
 }
 function IcoChat({ filled }: { filled: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="27" height="27" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   )
 }
 function IcoUser({ filled }: { filled: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="27" height="27" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -41,7 +41,7 @@ function IcoUser({ filled }: { filled: boolean }) {
 }
 function IcoPlus() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
       <line x1="12" y1="4" x2="12" y2="20" />
       <line x1="4" y1="12" x2="20" y2="12" />
     </svg>
@@ -146,7 +146,7 @@ export default function MobileNav() {
   const NavItem = ({ active, children, label, href, badge }: {
     active: boolean; children: React.ReactNode; label: string; href: string; badge?: number
   }) => (
-    <Link href={href} className="relative flex flex-col items-center justify-center gap-1 flex-1 py-2"
+    <Link href={href} className="relative flex flex-col items-center justify-center gap-1.5 flex-1 py-2.5"
       style={{ color: active ? BLUE : '#9ca3af' }}>
       <div className="relative">
         {children}
@@ -156,14 +156,14 @@ export default function MobileNav() {
           </span>
         ) : null}
       </div>
-      <span className="text-[11px] font-semibold leading-none">{label}</span>
+      <span className="text-[13px] font-semibold leading-none">{label}</span>
       {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ backgroundColor: BLUE }} />}
     </Link>
   )
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center md:hidden z-50"
-      style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))', minHeight: '60px' }}>
+      style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))', minHeight: '74px' }}>
 
       <NavItem href="/" active={isHome} label={t(lang, 'nav_home')}>
         <IcoSearch />

@@ -29,11 +29,14 @@ const APPLE_SPLASH = [
 ]
 
 export const viewport: Viewport = {
-  themeColor: '#0b3d91',
+  themeColor: '#003F87',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  // Le clavier virtuel redimensionne la zone de contenu : les champs et le
+  // bandeau fixe bas remontent au-dessus du clavier au lieu d'être masqués.
+  interactiveWidget: 'resizes-content',
 }
 
 export const metadata: Metadata = {
@@ -127,7 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `
         }} />
       </head>
-      <body className="bg-gray-50 pb-[60px] md:pb-0">
+      <body className="bg-gray-50 pb-[calc(74px+env(safe-area-inset-bottom))] md:pb-0">
         {/* Données structurées globales : identité du site + recherche (rich results Google) */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([
           {

@@ -72,7 +72,7 @@ export default function InstallPrompt() {
   if (!show) return null
 
   return (
-    <div className="fixed bottom-16 md:bottom-4 left-3 right-3 z-40 max-w-sm mx-auto">
+    <div className="fixed bottom-[calc(74px+env(safe-area-inset-bottom))] md:bottom-4 left-3 right-3 z-40 max-w-sm mx-auto">
       <div className="bg-black text-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl">
         <img src="/icon-192.png" alt="" className="w-10 h-10 rounded-xl shrink-0" />
         <div className="flex-1 min-w-0">

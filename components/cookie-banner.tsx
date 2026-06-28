@@ -55,7 +55,7 @@ export default function CookieBanner() {
   const reopened = choice !== null
 
   return (
-    <div className="fixed bottom-16 md:bottom-4 left-0 right-0 z-50 px-3 max-w-2xl mx-auto">
+    <div className="fixed bottom-[calc(74px+env(safe-area-inset-bottom))] md:bottom-4 left-0 right-0 z-50 px-3 max-w-2xl mx-auto">
       <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-4">
         <div className="flex items-start gap-3 mb-3">
           <span className="text-2xl shrink-0">🍪</span>
