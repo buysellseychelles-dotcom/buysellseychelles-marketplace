@@ -44,7 +44,7 @@ export async function POST(req: Request) {
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td style="background:rgba(0,0,0,0.22);padding:32px 24px;text-align:center">
-                        <p style="font-size:36px;margin:0 0 8px;line-height:1">🌴</p>
+                        <img src="${SITE_URL}/logo-email.png" width="56" height="56" alt="BuySellSeychelles" style="display:block;margin:0 auto 10px;border-radius:14px" />
                         <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700">BuySellSeychelles</h1>
                         <p style="color:rgba(255,255,255,0.82);margin:6px 0 0;font-size:13px">The Seychelles marketplace</p>
                       </td>

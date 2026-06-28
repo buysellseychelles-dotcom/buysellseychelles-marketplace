@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import CookieSettingsButton from '@/components/cookie-settings-button'
+import BrandLogo from '@/components/brand-logo'
 
 export default function SiteFooter() {
   return (
@@ -10,10 +11,7 @@ export default function SiteFooter() {
           {/* Logo + tagline */}
           <div className="shrink-0">
             <Link href="/" className="inline-flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: '#003F87' }}>
-                <span className="text-white font-extrabold text-xs">BS</span>
-              </div>
+              <BrandLogo className="w-8 h-8 rounded-lg shrink-0" />
               <span className="font-extrabold text-white text-sm">BuySellSeychelles</span>
             </Link>
             <p className="text-xs text-gray-500 leading-relaxed max-w-[200px]">

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CATEGORIES } from '@/lib/types';
+import BrandLogo from '@/components/brand-logo';
 
 export function Footer() {
   return (
@@ -9,9 +10,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">BS</span>
-              </div>
+              <BrandLogo className="w-10 h-10 rounded-lg" />
               <span className="font-bold text-lg text-foreground">
                 BuySellSeychelles
               </span>

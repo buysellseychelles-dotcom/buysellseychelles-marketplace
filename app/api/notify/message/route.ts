@@ -60,7 +60,8 @@ export async function POST(req: Request) {
         html: `
           <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
             <div style="background:linear-gradient(135deg,#003F87 0%,#003F87 50%,#007A3D 100%);padding:20px;border-radius:12px 12px 0 0;text-align:center">
-              <h1 style="color:#fff;margin:0;font-size:20px">🌴 BuySellSeychelles</h1>
+              <img src="https://buysellseychelles.com/logo-email.png" width="40" height="40" alt="" style="display:inline-block;vertical-align:middle;border-radius:10px;margin-right:8px" />
+              <span style="color:#fff;font-size:20px;font-weight:700;vertical-align:middle">BuySellSeychelles</span>
             </div>
             <div style="background:#f9f9f9;padding:24px;border-radius:0 0 12px 12px;border:1px solid #eee">
               <p style="font-size:16px;font-weight:600;color:#111;margin-top:0">

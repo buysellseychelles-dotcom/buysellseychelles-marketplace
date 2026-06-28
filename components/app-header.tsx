@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import { useLang } from '@/lib/lang-context'
 import { t } from '@/lib/i18n'
+import BrandLogo from '@/components/brand-logo'
 
 const GRADIENT = 'linear-gradient(90deg, #003F87 0%, #003F87 15%, #FCD116 42%, #BE0027 68%, #007A3D 100%)'
 
@@ -116,16 +117,13 @@ export default function AppHeader() {
   /* ── Logo commun ── */
   const Logo = (
     <Link href="/" className="flex items-center gap-2">
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-        style={{ backgroundColor: '#003F87' }}>
-        <span className="text-white font-extrabold text-sm">BS</span>
-      </div>
-      <span className="font-extrabold text-base sm:text-lg leading-none hidden sm:inline"
+      <BrandLogo className="w-8 h-8 rounded-xl shrink-0 shadow-sm" />
+      <span className="font-extrabold text-base sm:text-lg leading-tight py-0.5 hidden sm:inline"
         style={{ background: GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         BuySellSeychelles
       </span>
       {/* Texte affiché centré sur mobile dans le layout grid */}
-      <span className="font-extrabold text-base leading-none sm:hidden"
+      <span className="font-extrabold text-base leading-tight py-0.5 sm:hidden"
         style={{ background: GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
         BuySellSeychelles
       </span>
@@ -175,11 +173,8 @@ export default function AppHeader() {
         <div className="w-11 shrink-0">{Bell}</div>
         <div className="flex-1 flex items-center justify-center">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-              style={{ backgroundColor: '#003F87' }}>
-              <span className="text-white font-extrabold text-base">BS</span>
-            </div>
-            <span className="font-extrabold text-xl leading-none"
+            <BrandLogo className="w-9 h-9 rounded-xl shrink-0 shadow-sm" />
+            <span className="font-extrabold text-lg leading-tight py-0.5"
               style={{ background: GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               BuySellSeychelles
             </span>
@@ -192,11 +187,8 @@ export default function AppHeader() {
       <div className="hidden sm:flex h-16 items-center px-6 max-w-7xl mx-auto gap-4 w-full">
 
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-            style={{ backgroundColor: '#003F87' }}>
-            <span className="text-white font-extrabold text-sm">BS</span>
-          </div>
-          <span className="font-extrabold text-xl leading-none"
+          <BrandLogo className="w-8 h-8 rounded-xl shrink-0 shadow-sm" />
+          <span className="font-extrabold text-lg leading-tight py-0.5"
             style={{ background: GRADIENT, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             BuySellSeychelles
           </span>

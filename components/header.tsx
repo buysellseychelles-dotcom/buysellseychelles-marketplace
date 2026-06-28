@@ -6,6 +6,7 @@ import { useMarketplaceStore } from '@/lib/store-old';
 import { Search, Plus, User, Menu, X, LogOut, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthModal } from '@/components/auth-modal';
+import BrandLogo from '@/components/brand-logo';
 
 interface HeaderProps {
   onSearch?: (query: string) => void;
@@ -44,9 +45,7 @@ export function Header({ onSearch, searchQuery = '' }: HeaderProps) {
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">BS</span>
-              </div>
+              <BrandLogo className="w-10 h-10 rounded-lg" />
               <span className="hidden sm:block font-bold text-lg text-foreground">
                 BuySellSeychelles
               </span>

@@ -247,7 +247,8 @@ function LoginContent() {
       </Link>
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md overflow-hidden">
         <div className="px-8 py-7 text-center" style={{ background: 'linear-gradient(135deg, #003F87 0%, #003F87 20%, #FCD116 40%, #BE0027 55%, #FFFFFF 72%, #007A3D 88%, #007A3D 100%)' }}>
-          <p className="text-3xl mb-1">🌴</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/logo.svg" alt="BuySellSeychelles" className="w-16 h-16 mx-auto mb-2 rounded-2xl shadow-md" />
           <h1 className="text-white text-2xl font-bold">BuySellSeychelles</h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.72)' }}>{t(lang, 'marketplace_tagline')}</p>
         </div>

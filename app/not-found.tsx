@@ -5,7 +5,8 @@ export default function NotFound() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
 
       <div className="mb-8 inline-flex items-center gap-2">
-        <span className="text-2xl">🌴</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/logo.svg" alt="BuySellSeychelles" className="w-9 h-9 rounded-lg" />
         <span className="font-bold text-lg" style={{ color: '#003F87' }}>BuySellSeychelles</span>
       </div>
 

@@ -77,6 +77,10 @@ export async function applyVerificationDecision(
       html: `
         <div style="font-family:sans-serif;max-width:520px;color:#1a1a1a">
           <div style="background:${approved ? 'linear-gradient(135deg,#007A3D 0%,#005c2e 100%)' : 'linear-gradient(135deg,#BE0027 0%,#7f0018 100%)'};padding:20px 24px;border-radius:12px 12px 0 0">
+            <p style="margin:0 0 10px">
+              <img src="https://buysellseychelles.com/logo-email.png" width="26" height="26" alt="" style="display:inline-block;vertical-align:middle;border-radius:7px;margin-right:6px" />
+              <span style="color:rgba(255,255,255,0.92);font-size:13px;font-weight:600;vertical-align:middle">BuySellSeychelles</span>
+            </p>
             <h2 style="color:#fff;margin:0;font-size:18px">${approved ? '✓ Identity verified' : '🪪 Identity verification update'}</h2>
           </div>
           <div style="padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">

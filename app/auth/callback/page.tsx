@@ -102,7 +102,8 @@ export default function AuthCallback() {
         <div className="relative px-8 py-10 text-center" style={{ background: FLAG }}>
           <div className="absolute inset-0 bg-black/25" />
           <div className="relative z-10 text-white">
-            <div className="text-5xl mb-2">🌴</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/logo.svg" alt="BuySellSeychelles" className="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-md" />
             <h1 className="text-2xl font-bold">BuySellSeychelles</h1>
             <p className="text-sm mt-1 opacity-80">The Seychelles marketplace</p>
           </div>
