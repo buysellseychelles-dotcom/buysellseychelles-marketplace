@@ -99,6 +99,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         ))}
 
+        {/* Capture l'événement d'installation PWA dès le chargement (Chrome le
+            déclenche souvent avant le montage de React → sinon il est perdu) */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.addEventListener('beforeinstallprompt', function(e) {
+              e.preventDefault();
+              window.__bipEvent = e;
+              window.dispatchEvent(new Event('bip-available'));
+            });
+            window.addEventListener('appinstalled', function() {
+              window.__bipEvent = null;
+              window.dispatchEvent(new Event('bip-installed'));
+            });
+          `
+        }} />
+
         {/* Service Worker */}
         <script dangerouslySetInnerHTML={{
           __html: `

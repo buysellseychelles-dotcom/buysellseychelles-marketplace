@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 export default function InstallPrompt() {
-  const [prompt, setPrompt] = useState<any>(null)
+  const [ready, setReady] = useState(false) // un événement d'install est dispo (Android/Chrome)
   const [show, setShow] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
 
@@ -11,6 +11,7 @@ export default function InstallPrompt() {
     // Déjà installé ou déjà refusé → ne pas afficher
     if (
       window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
       sessionStorage.getItem('install-dismissed')
     ) return
 
@@ -22,14 +23,26 @@ export default function InstallPrompt() {
       return
     }
 
-    // Android / Chrome
-    const handler = (e: Event) => {
-      e.preventDefault()
-      setPrompt(e)
+    // Android / Chrome : l'événement a peut-être déjà été capté par le script du
+    // <head> avant le montage de ce composant → on le récupère immédiatement.
+    if ((window as any).__bipEvent) {
+      setReady(true)
       setShow(true)
     }
-    window.addEventListener('beforeinstallprompt', handler)
-    return () => window.removeEventListener('beforeinstallprompt', handler)
+
+    // …et on réagit à ceux qui arrivent après le montage.
+    const onAvailable = () => {
+      if (sessionStorage.getItem('install-dismissed')) return
+      setReady(true)
+      setShow(true)
+    }
+    const onInstalled = () => setShow(false)
+    window.addEventListener('bip-available', onAvailable)
+    window.addEventListener('bip-installed', onInstalled)
+    return () => {
+      window.removeEventListener('bip-available', onAvailable)
+      window.removeEventListener('bip-installed', onInstalled)
+    }
   }, [])
 
   const dismiss = () => {
@@ -38,11 +51,22 @@ export default function InstallPrompt() {
   }
 
   const install = async () => {
-    if (!prompt) return
-    prompt.prompt()
-    const { outcome } = await prompt.userChoice
-    if (outcome === 'accepted') setShow(false)
-    else dismiss()
+    const evt = (window as any).__bipEvent
+    if (!evt) {
+      // Plus d'événement disponible (déjà consommé / non installable) → on referme proprement.
+      dismiss()
+      return
+    }
+    evt.prompt()
+    try {
+      const { outcome } = await evt.userChoice
+      if (outcome === 'accepted') setShow(false)
+      else dismiss()
+    } finally {
+      // L'événement ne peut servir qu'une fois.
+      ;(window as any).__bipEvent = null
+      setReady(false)
+    }
   }
 
   if (!show) return null
@@ -65,7 +89,7 @@ export default function InstallPrompt() {
             <p className="text-xs text-gray-400 mt-0.5">Install the app — works offline</p>
           )}
         </div>
-        {!isIOS && (
+        {!isIOS && ready && (
           <button
             onClick={install}
             className="bg-white text-black text-xs font-bold px-3 py-1.5 rounded-xl shrink-0"
