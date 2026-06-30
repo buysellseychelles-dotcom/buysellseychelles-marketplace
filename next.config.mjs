@@ -11,6 +11,23 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Le SW doit toujours être revalidé : pas de mise en cache CDN.
+        // Service-Worker-Allowed: / autorise explicitement le scope racine.
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+      {
+        // Le manifest doit être servi avec le bon Content-Type et sans cache long.
+        source: '/manifest.json',
+        headers: [
+          { key: 'Content-Type', value: 'application/manifest+json' },
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+        ],
+      },
+      {
         source: '/(.*)',
         headers: [
           // Empêche l'affichage dans des iframes (clickjacking)

@@ -55,7 +55,8 @@ export default function ContactButton({
     <button
       onClick={handleContact}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-2 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 text-sm"
+      className="w-full flex items-center justify-center gap-2 text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+      style={{ backgroundColor: '#003F87' }}
     >
       {loading ? (
         <span>Loading...</span>

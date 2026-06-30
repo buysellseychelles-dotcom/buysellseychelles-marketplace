@@ -5,34 +5,23 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import CategoryFields, { type ExtraFields } from '@/components/category-fields'
+import { CATEGORY_TREE, getCatLabel, getTopCatForValue } from '@/lib/category-tree'
 import { compressImages } from '@/lib/compress-image'
 import { fileTooLarge, fileExceedsRaw } from '@/lib/upload-limits'
 import { storagePathFromUrl, LISTINGS_BUCKET } from '@/lib/storage-cleanup'
 import { districtsFor, ALL_DISTRICTS } from '@/lib/districts'
 
-const CATEGORIES = [
-  { value: 'voiture',      label: '🚗 Vehicles' },
-  { value: 'immobilier',   label: '🏡 Real Estate' },
-  { value: 'electronique', label: '📱 Electronics' },
-  { value: 'emploi',       label: '💼 Jobs' },
-  { value: 'services',     label: '🔧 Services' },
-  { value: 'bateau',       label: '⛵ Boats' },
-  { value: 'tourisme',     label: '🌴 Tourism' },
-  { value: 'mode',         label: '👗 Fashion' },
-  { value: 'maison',       label: '🛋️ Home & Garden' },
-  { value: 'loisirs',      label: '⚽ Sports & Leisure' },
-  { value: 'animaux',      label: '🐾 Pets & Animals' },
-  { value: 'dons',         label: '🎁 Free & Exchange' },
-  { value: 'pro',          label: '🏭 Pro Equipment' },
-  { value: 'autre',        label: '📦 Other' },
-]
-
 const ISLANDS = ['Mahé', 'Praslin', 'La Digue', 'Silhouette', 'Other islands']
+
+type ImageItem =
+  | { kind: 'existing'; id?: string; url: string }
+  | { kind: 'new'; file: File; preview: string }
 
 export default function EditListingPage() {
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const savingRef = useRef(false)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -51,13 +40,10 @@ export default function EditListingPage() {
   const [island, setIsland] = useState('')
   const [quartier, setQuartier] = useState('')
   const [category, setCategory] = useState('')
+  const [topCatId, setTopCatId] = useState<string | null>(null)
   const [extra, setExtra] = useState<ExtraFields>({})
-  // Catégories sans prix : Jobs (emploi/emploi_demande), Free & Exchange (dons/troc)
-  // et Community (wanted/lost_found — recherches & objets perdus/trouvés)
   const hidePrice = ['emploi', 'emploi_demande', 'dons', 'troc', 'wanted', 'lost_found'].includes(category)
-  const [existingImages, setExistingImages] = useState<{ id?: string; image_url: string }[]>([])
-  const [newFiles, setNewFiles] = useState<File[]>([])
-  const [newPreviews, setNewPreviews] = useState<string[]>([])
+  const [images, setImages] = useState<ImageItem[]>([])
   const [qualityScore, setQualityScore] = useState<number | null>(null)
   const [qualityTips, setQualityTips] = useState<string[]>([])
   const [qualityLoading, setQualityLoading] = useState(false)
@@ -89,7 +75,7 @@ export default function EditListingPage() {
 
       const { data: listing } = await supabase
         .from('listings')
-        .select('*, listing_images(id, image_url)')
+        .select('*')
         .eq('id', params.id)
         .single()
 
@@ -119,7 +105,20 @@ export default function EditListingPage() {
         if (foundQuartier) setQuartier(foundQuartier)
       }
 
-      setExistingImages(listing.listing_images ?? [])
+      // Charger les images dans l'ordre de création pour garantir que "Main" (index 0) est stable
+      const { data: listingImgs } = await supabase
+        .from('listing_images')
+        .select('id, image_url')
+        .eq('listing_id', params.id)
+        .order('created_at', { ascending: true })
+
+      setImages(
+        (listingImgs ?? []).map((img: { id: string; image_url: string }) => ({
+          kind: 'existing' as const,
+          id: img.id,
+          url: img.image_url,
+        }))
+      )
 
       setExtra({
         make: listing.make ?? '',
@@ -146,8 +145,7 @@ export default function EditListingPage() {
   }, [params.id, router])
 
   const handleNewImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const currentTotal = existingImages.length + newFiles.length
-    const remaining = PHOTO_LIMIT - currentTotal
+    const remaining = PHOTO_LIMIT - images.length
     if (remaining <= 0) { e.target.value = ''; return }
     const picked = Array.from(e.target.files ?? []).slice(0, remaining)
     e.target.value = ''
@@ -159,32 +157,46 @@ export default function EditListingPage() {
     const compressed = await compressImages(picked)
     const tooBig = compressed.find(f => fileTooLarge(f))
     if (tooBig) { setError(fileTooLarge(tooBig)!); return }
-    setNewPreviews(prev => [...prev, ...compressed.map(f => URL.createObjectURL(f))])
-    setNewFiles(prev => [...prev, ...compressed])
+    setImages(prev => [
+      ...prev,
+      ...compressed.map(f => ({ kind: 'new' as const, file: f, preview: URL.createObjectURL(f) })),
+    ])
   }
 
-  const removeExistingImage = async (index: number) => {
-    const img = existingImages[index]
-    if (img.id) {
-      await supabase.from('listing_images').delete().eq('id', img.id)
-      // Retire aussi le fichier du Storage (évite les orphelins)
-      const path = storagePathFromUrl(img.image_url)
+  const removeImage = async (index: number) => {
+    const item = images[index]
+    if (item.kind === 'existing') {
+      // Supprimer le fichier du Storage immédiatement ; la ligne listing_images
+      // sera supprimée lors du handleSave (DELETE + réinsertion complète).
+      const path = storagePathFromUrl(item.url)
       if (path) await supabase.storage.from(LISTINGS_BUCKET).remove([path])
+    } else if (item.kind === 'new') {
+      URL.revokeObjectURL(item.preview)
     }
-    setExistingImages(prev => prev.filter((_, i) => i !== index))
+    setImages(prev => prev.filter((_, i) => i !== index))
   }
 
-  const removeNewImage = (index: number) => {
-    setNewFiles(prev => prev.filter((_, i) => i !== index))
-    setNewPreviews(prev => prev.filter((_, i) => i !== index))
+  const moveImage = (from: number, to: number) => {
+    if (from === to) return
+    setImages(prev => {
+      const next = [...prev]
+      next.splice(to, 0, next.splice(from, 1)[0])
+      return next
+    })
   }
 
   const handleSave = async () => {
+    if (savingRef.current) return
     setError('')
     if (!title.trim()) { setError('Title is required.'); return }
     if (!category) { setError('Please choose a category.'); return }
     if (!island) { setError('Please choose an island.'); return }
+    if (!hasPhotoPack && images.length > 3) {
+      setError('Free listings are limited to 3 photos. Remove extra photos or unlock the photo pack.')
+      return
+    }
 
+    savingRef.current = true
     setSaving(true)
 
     const location = quartier ? `${quartier}, ${island}` : island
@@ -225,6 +237,7 @@ export default function EditListingPage() {
     if (updateError) {
       setError(updateError.message)
       setSaving(false)
+      savingRef.current = false
       return
     }
 
@@ -247,16 +260,46 @@ export default function EditListingPage() {
       }).catch(() => {})
     }
 
-    // Upload nouvelles photos
-    for (const file of newFiles) {
-      const fileName = `${params.id}-${Date.now()}-${file.name}`
-      const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, file)
-      if (!uploadError) {
+    // 1. Uploader les nouvelles photos dans Storage (côté client, anon key suffisante)
+    const orderedUrls: string[] = []
+    for (const item of images) {
+      if (item.kind === 'existing') {
+        orderedUrls.push(item.url)
+      } else {
+        const fileName = `${params.id}-${Date.now()}-${Math.random().toString(36).slice(2)}-${item.file.name}`
+        const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, item.file)
+        if (uploadError) {
+          setError('Failed to upload photo. Please try again.')
+          setSaving(false)
+          savingRef.current = false
+          return
+        }
         const { data } = supabase.storage.from('listings').getPublicUrl(fileName)
-        await supabase.from('listing_images').insert({ listing_id: params.id, image_url: data.publicUrl })
+        orderedUrls.push(data.publicUrl)
       }
     }
 
+    // 2. Déléguer le DELETE + INSERT au serveur (service_role) pour bypasser la RLS.
+    //    La RLS Supabase retourne "success" avec 0 lignes supprimées sans jamais
+    //    lever d'erreur côté client — seul le service_role garantit la suppression réelle.
+    const { data: { session } } = await supabase.auth.getSession()
+    const photosRes = await fetch('/api/listings/photos', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token ?? ''}`,
+      },
+      body: JSON.stringify({ listing_id: params.id, urls: orderedUrls }),
+    })
+    if (!photosRes.ok) {
+      const body = await photosRes.json().catch(() => ({}))
+      setError(body.error ?? 'Failed to save photos. Please try again.')
+      setSaving(false)
+      savingRef.current = false
+      return
+    }
+
+    savingRef.current = false
     router.push('/dashboard')
   }
 
@@ -268,7 +311,7 @@ export default function EditListingPage() {
     )
   }
 
-  const totalImages = existingImages.length + newPreviews.length
+  const totalImages = images.length
 
   return (
     <div className="max-w-xl mx-auto pb-4">
@@ -290,41 +333,31 @@ export default function EditListingPage() {
             Photos <span className="text-gray-400 font-normal">({totalImages}/{PHOTO_LIMIT})</span>
           </label>
           <div className="flex gap-2 flex-wrap">
-            {/* Images existantes */}
-            {existingImages.map((img, i) => (
-              <div key={i}
-                draggable
-                onDragStart={e => e.dataTransfer.setData('text/plain', String(i))}
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => {
-                  e.preventDefault()
-                  const from = Number(e.dataTransfer.getData('text/plain'))
-                  if (from === i) return
-                  const next = [...existingImages]
-                  next.splice(i, 0, next.splice(from, 1)[0])
-                  setExistingImages(next)
-                }}
-                className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 cursor-grab active:cursor-grabbing">
-                <Image src={img.image_url} alt="" fill className="object-cover" />
-                {i === 0 && (
-                  <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] font-bold text-center py-0.5">Main</span>
-                )}
-                <button
-                  onClick={() => removeExistingImage(i)}
-                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                >×</button>
-              </div>
-            ))}
-            {/* Nouvelles images */}
-            {newPreviews.map((src, i) => (
-              <div key={`new-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
-                <Image src={src} alt="" fill className="object-cover" />
-                <button
-                  onClick={() => removeNewImage(i)}
-                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                >×</button>
-              </div>
-            ))}
+            {images.map((item, i) => {
+              const src = item.kind === 'existing' ? item.url : item.preview
+              return (
+                <div
+                  key={i}
+                  draggable
+                  onDragStart={e => e.dataTransfer.setData('text/plain', String(i))}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault()
+                    moveImage(Number(e.dataTransfer.getData('text/plain')), i)
+                  }}
+                  className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 cursor-grab active:cursor-grabbing"
+                >
+                  <Image src={src} alt="" fill className="object-cover" />
+                  {i === 0 && (
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] font-bold text-center py-0.5">Main</span>
+                  )}
+                  <button
+                    onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  >×</button>
+                </div>
+              )
+            })}
             {totalImages < PHOTO_LIMIT && (
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -336,6 +369,9 @@ export default function EditListingPage() {
             )}
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewImages} />
+          {images.length > 1 && (
+            <p className="text-xs text-gray-400 mt-1.5">Drag to reorder — first photo is the cover image</p>
+          )}
 
           {/* Upsell photo pack */}
           {!hasPhotoPack && totalImages >= 3 && (
@@ -383,17 +419,83 @@ export default function EditListingPage() {
           <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/100</p>
         </div>
 
-        {/* Catégorie */}
+        {/* Catégorie — sélecteur hiérarchique identique à /post-ad */}
         <div>
           <label className="text-sm font-semibold text-gray-800 block mb-2">Category <span className="text-red-500">*</span></label>
-          <div className="grid grid-cols-2 gap-2">
-            {CATEGORIES.map(c => (
-              <button key={c.value} onClick={() => setCategory(c.value)}
-                className={`py-2.5 px-3 rounded-xl text-sm font-medium border transition-colors text-left ${category === c.value ? 'bg-black text-white border-black' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'}`}>
-                {c.label}
+
+          {/* Catégorie déjà choisie → puce avec bouton changer */}
+          {category && (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="flex items-center gap-1.5 bg-black text-white text-sm font-medium px-3 py-1.5 rounded-full">
+                {getTopCatForValue(category) && `${getTopCatForValue(category)!.icon} `}
+                {getCatLabel(category, 'en')}
+              </span>
+              <button
+                type="button"
+                onClick={() => { setCategory(''); setTopCatId(null); setExtra({}) }}
+                className="text-xs text-gray-500 underline hover:text-gray-800"
+              >
+                Change
               </button>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {/* Sélecteur visible uniquement si aucune catégorie choisie */}
+          {!category && (
+            <>
+              {/* Niveau 1 : catégories principales */}
+              {!topCatId && (
+                <div className="grid grid-cols-2 gap-2">
+                  {CATEGORY_TREE.map(top => (
+                    <button
+                      key={top.id}
+                      type="button"
+                      onClick={() => {
+                        if (top.subs.length === 1) {
+                          setCategory(top.subs[0].value)
+                        } else {
+                          setTopCatId(top.id)
+                        }
+                      }}
+                      className="flex items-center gap-2 py-3 px-3 rounded-xl text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:border-gray-800 hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <span className="text-xl leading-none shrink-0">{top.icon}</span>
+                      <span className="leading-tight">{top.en}</span>
+                      {top.subs.length > 1 && <span className="ml-auto text-gray-400 text-xs">›</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Niveau 2 : sous-catégories */}
+              {topCatId && (() => {
+                const top = CATEGORY_TREE.find(t => t.id === topCatId)!
+                return (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setTopCatId(null)}
+                      className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 mb-3 font-medium"
+                    >
+                      ← {top.en}
+                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      {top.subs.map(sub => (
+                        <button
+                          key={sub.value}
+                          type="button"
+                          onClick={() => { setCategory(sub.value); setTopCatId(null) }}
+                          className="py-3 px-3 rounded-xl text-sm font-medium border border-gray-200 bg-white text-gray-700 hover:border-gray-800 hover:bg-gray-50 transition-colors text-left"
+                        >
+                          {sub.en}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
+            </>
+          )}
         </div>
 
         {/* Category-specific fields */}

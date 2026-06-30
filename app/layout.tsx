@@ -32,8 +32,9 @@ export const viewport: Viewport = {
   themeColor: '#003F87',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Pas de maximumScale/userScalable : le pinch-to-zoom volontaire reste possible
+  // (accessibilité). Le zoom intempestif au focus est bloqué par le font-size: 16px
+  // appliqué aux inputs dans globals.css.
   // Le clavier virtuel redimensionne la zone de contenu : les champs et le
   // bandeau fixe bas remontent au-dessus du clavier au lieu d'être masqués.
   interactiveWidget: 'resizes-content',
@@ -53,7 +54,10 @@ export const metadata: Metadata = {
     title: 'BuySell',
   },
   icons: {
+    shortcut: '/favicon.ico',
     icon: [
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icon.svg', type: 'image/svg+xml' },
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },

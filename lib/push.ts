@@ -41,3 +41,46 @@ export async function sendPushToUser(
     }),
   )
 }
+
+// Envoie une notification push aux appareils mobiles (Expo Push Service)
+export async function sendExpoPushToUser(
+  userId: string,
+  payload: { title: string; body: string; data?: Record<string, unknown> },
+) {
+  const { data: tokens } = await supabase
+    .from('expo_push_tokens')
+    .select('token')
+    .eq('user_id', userId)
+
+  if (!tokens || tokens.length === 0) return
+
+  const messages = tokens.map((row) => ({
+    to: row.token,
+    title: payload.title,
+    body: payload.body,
+    data: payload.data ?? {},
+    sound: 'default',
+    priority: 'high',
+  }))
+
+  const res = await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(messages.length === 1 ? messages[0] : messages),
+  })
+
+  // Nettoie les tokens invalides retournés par Expo
+  if (res.ok) {
+    const json = await res.json().catch(() => null)
+    const results: any[] = Array.isArray(json?.data) ? json.data : (json?.data ? [json.data] : [])
+    const badTokens = tokens
+      .filter((_, i) => results[i]?.status === 'error' && results[i]?.details?.error === 'DeviceNotRegistered')
+      .map((r) => r.token)
+    if (badTokens.length > 0) {
+      await supabase.from('expo_push_tokens').delete().in('token', badTokens)
+    }
+  }
+}

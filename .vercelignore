@@ -1,0 +1,29 @@
+# v0 sandbox internal files
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+.vercel/
+
+# Environment variables
+.env*.local
+
+# Common ignores
+node_modules
+.next/
+.DS_Store
+.vercel
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+
+# Git internals (OneDrive cloud-only placeholders cause read errors in Vercel CLI)
+.git/
+
+# OneDrive cloud-only zombie files (deleted components, not imported anywhere)
+components/homepage.tsx
+components/install-app.tsx
+components/listing-card.tsx
+components/listings-grid.tsx
+components/my-listings-page.tsx

@@ -95,7 +95,7 @@ export async function POST(req: Request) {
                 <a href="${documentUrl}" target="_blank" style="display:block;text-decoration:none">
                   <img src="${documentUrl}" alt="Submitted ID document" style="display:block;max-width:100%;border:1px solid #e5e7eb;border-radius:10px" />
                 </a>
-                <p style="margin:8px 0 0"><a href="${documentUrl}" target="_blank" style="font-size:12px;color:#003F87">Open document in full size →</a></p>
+                <p style="margin:8px 0 0"><a href="${documentUrl}" target="_blank" style="font-size:12px;color:#003F87">View document →</a></p>
 
                 <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0"/>
 

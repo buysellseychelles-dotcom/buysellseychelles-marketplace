@@ -13,7 +13,7 @@ export async function getAdminUser() {
     cookieStore.get(`sb-${PROJECT_REF}-auth-token.0`)?.value
   if (!tokenCookie) return null
   try {
-    const { access_token } = JSON.parse(tokenCookie)
+    const { access_token } = JSON.parse(decodeURIComponent(tokenCookie))
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

@@ -114,7 +114,7 @@ export function SearchFilters({ compact }: { compact?: boolean } = {}) {
 
   return (
     <>
-      <div className="bg-white border-b sticky top-14 lg:top-16 z-40 shadow-sm">
+      <div className="bg-white border-b sticky top-14 lg:top-16 z-40 shadow-sm overflow-x-hidden">
 
         {/* ── Mobile : champ de recherche + bouton filtres ── */}
         <div className="lg:hidden max-w-2xl mx-auto px-3 py-2.5">
@@ -124,13 +124,13 @@ export function SearchFilters({ compact }: { compact?: boolean } = {}) {
               placeholder={t(lang, 'search_placeholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 bg-gray-50"
+              className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 bg-gray-50"
               style={{ '--tw-ring-color': '#003F87' } as any}
             />
             <button
               type="submit"
               disabled={isPending}
-              className="text-white px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
+              className="shrink-0 text-white px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
               style={{ backgroundColor: '#003F87' }}
             >
               {isPending ? '...' : '🔍'}
@@ -138,7 +138,7 @@ export function SearchFilters({ compact }: { compact?: boolean } = {}) {
             <button
               type="button"
               onClick={() => setShowPanel(true)}
-              className={`flex items-center gap-1.5 border px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeFiltersCount > 0 ? 'bg-black text-white border-black' : 'border-gray-300 hover:border-black text-gray-700'}`}
+              className={`shrink-0 flex items-center gap-1.5 border px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeFiltersCount > 0 ? 'bg-black text-white border-black' : 'border-gray-300 hover:border-black text-gray-700'}`}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" />
@@ -157,7 +157,7 @@ export function SearchFilters({ compact }: { compact?: boolean } = {}) {
               <button
                 type="button"
                 onClick={() => { setShowSaveAlert(true); setAlertLabel(search.trim() || '') }}
-                className="border border-gray-300 px-3 py-2.5 rounded-xl text-sm hover:border-black transition-colors"
+                className="shrink-0 border border-gray-300 px-3 py-2.5 rounded-xl text-sm hover:border-black transition-colors"
                 title={t(lang, 'save_search')}
               >🔔</button>
             )}

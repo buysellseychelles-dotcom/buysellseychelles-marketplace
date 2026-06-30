@@ -17,7 +17,7 @@ async function getAdminUser() {
     cookieStore.get(`sb-${projectRef}-auth-token.0`)?.value
   if (!tokenCookie) return null
   try {
-    const { access_token } = JSON.parse(tokenCookie)
+    const { access_token } = JSON.parse(decodeURIComponent(tokenCookie))
     const { data: { user } } = await supabase.auth.getUser(access_token)
     return user
   } catch { return null }

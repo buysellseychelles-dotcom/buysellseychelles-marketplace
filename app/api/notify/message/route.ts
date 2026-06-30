@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendPushToUser } from '@/lib/push'
+import { sendPushToUser, sendExpoPushToUser } from '@/lib/push'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -93,11 +93,18 @@ export async function POST(req: Request) {
       link: `/conversations/${conversationId}`,
     })
 
-    // Notification push (même navigateur fermé)
+    // Notification push web (même navigateur fermé)
     await sendPushToUser(recipientId, {
       title: `💬 ${senderName}`,
       body: messageText.slice(0, 100),
       url: `/conversations/${conversationId}`,
+    })
+
+    // Notification push mobile (Expo)
+    await sendExpoPushToUser(recipientId, {
+      title: `💬 ${senderName}`,
+      body: messageText.slice(0, 100),
+      data: { conversationId, screen: 'conversation' },
     })
 
     return NextResponse.json({ ok: true })

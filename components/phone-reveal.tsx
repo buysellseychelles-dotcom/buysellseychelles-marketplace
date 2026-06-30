@@ -18,7 +18,9 @@ export default function PhoneReveal({ phone, cleanPhone, title }: Props) {
     return (
       <button
         onClick={() => setRevealed(true)}
-        className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white font-semibold py-3.5 rounded-xl hover:bg-black transition-colors text-sm">
+        className="w-full flex items-center justify-center gap-2 text-white font-semibold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-sm"
+        style={{ backgroundColor: '#003F87' }}
+      >
         📞 {t(lang, 'reveal_phone')}
       </button>
     )
@@ -34,14 +36,17 @@ export default function PhoneReveal({ phone, cleanPhone, title }: Props) {
       <div className="flex gap-2">
         <a
           href={`tel:${cleanPhone}`}
-          className="flex-1 flex items-center justify-center gap-2 bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition-colors text-sm">
+          className="flex-1 flex items-center justify-center gap-2 text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity text-sm"
+          style={{ backgroundColor: '#003F87' }}
+        >
           📞 {t(lang, 'call_btn')}
         </a>
         <a
           href={`https://wa.me/${cleanPhone}?text=${waText}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white font-semibold py-3 rounded-xl hover:bg-green-600 transition-colors text-sm">
+          className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white font-semibold py-3 rounded-xl hover:bg-green-600 transition-colors text-sm"
+        >
           💬 WhatsApp
         </a>
       </div>

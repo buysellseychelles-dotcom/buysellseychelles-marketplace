@@ -176,6 +176,11 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const categoryLabel = CATEGORY_LABELS?.[listing.category]?.en ?? listing.category
 
+  // Parse "Quartier, Island" → separate chips
+  const locationParts = listing.location?.split(', ') ?? []
+  const displayIsland = locationParts.length > 1 ? locationParts[locationParts.length - 1] : (listing.location ?? null)
+  const displayDistrict = locationParts.length > 1 ? locationParts.slice(0, -1).join(', ') : null
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -248,41 +253,72 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     : `Active ${sellerLastActiveDays} days ago`
 
   const SellerCard = (
-    <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-sm">
-      {/* Seller info */}
-      <div className="p-4 flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-black overflow-hidden flex items-center justify-center text-white font-bold shrink-0 relative">
-          {profile?.avatar_url && profile?.show_avatar_in_listings !== false
-            ? <Image src={profile.avatar_url} alt="" fill className="object-cover" unoptimized />
-            : (sellerDisplayName || '?')[0]?.toUpperCase()
-          }
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-sm font-semibold text-gray-800">{sellerDisplayName || t(lang, 'seller')}</p>
-            {profile?.is_pro && <span className="bg-yellow-400 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">⭐ PRO</span>}
-            {profile?.verified && <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">✓</span>}
-            {(profile as any)?.id_verified && <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">🪪 ID Verified</span>}
+    <div>
+      {/* Gradient header */}
+      <div
+        className="px-4 pt-4 pb-5 relative"
+        style={{ background: 'linear-gradient(135deg, #003F87 0%, #003F87 40%, #007A3D 100%)' }}
+      >
+        <div className="absolute inset-0 bg-black/10" />
+        <div className="relative flex items-center gap-3">
+          {/* Avatar */}
+          <div className="w-14 h-14 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-white text-xl font-bold shrink-0 relative border-2 border-white/40">
+            {profile?.avatar_url && profile?.show_avatar_in_listings !== false
+              ? <Image src={profile.avatar_url} alt="" fill className="object-cover" unoptimized />
+              : (sellerDisplayName || '?')[0]?.toUpperCase()
+            }
+            {/* Online dot */}
+            {sellerLastActiveDays === 0 && (
+              <span className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
+            )}
           </div>
-          {sellerAvgRating !== null && (
-            <Link href={`/seller/${listing.user_id}`} className="flex items-center gap-1.5 mt-0.5 w-fit">
-              <ReviewStars rating={sellerAvgRating} size="sm" />
-              <span className="text-xs text-gray-500">{sellerAvgRating.toFixed(1)} ({sellerReviewCount})</span>
-            </Link>
-          )}
-          {profile?.island && <p className="text-xs text-gray-500 mt-0.5">📍 {profile.island}</p>}
-          {sellerMemberSince && <p className="text-xs text-gray-400 mt-0.5">Member since {sellerMemberSince}</p>}
-          {sellerLastActiveLabel && (
-            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-              <span className={`w-1.5 h-1.5 rounded-full inline-block ${sellerLastActiveDays === 0 ? 'bg-green-500' : 'bg-gray-300'}`} />
-              {sellerLastActiveLabel}
-            </p>
-          )}
+          {/* Name + badges */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-white leading-tight">{sellerDisplayName || t(lang, 'seller')}</p>
+            <div className="flex items-center gap-1 flex-wrap mt-1">
+              {profile?.is_pro && (
+                <span className="bg-yellow-400 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">⭐ PRO</span>
+              )}
+              {profile?.verified && (
+                <span className="bg-white/20 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-white/30">✓ Verified</span>
+              )}
+              {(profile as any)?.id_verified && (
+                <span className="bg-green-400/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">🪪 ID Verified</span>
+              )}
+            </div>
+            {sellerAvgRating !== null && (
+              <div className="flex items-center gap-1 mt-1">
+                <ReviewStars rating={sellerAvgRating} size="sm" />
+                <span className="text-[11px] text-white/80">{sellerAvgRating.toFixed(1)} ({sellerReviewCount})</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Seller meta info */}
+      <div className="px-4 py-3 space-y-1.5 border-b border-gray-100">
+        {profile?.island && (
+          <p className="text-xs text-gray-600 flex items-center gap-1.5">
+            <span>🏝️</span> {profile.island}
+          </p>
+        )}
+        {sellerMemberSince && (
+          <p className="text-xs text-gray-500 flex items-center gap-1.5">
+            <span>📅</span> Member since {sellerMemberSince}
+          </p>
+        )}
+        {sellerLastActiveLabel && (
+          <p className="text-xs text-gray-500 flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${sellerLastActiveDays === 0 ? 'bg-green-500' : 'bg-gray-300'}`} />
+            {sellerLastActiveLabel}
+          </p>
+        )}
+      </div>
+
       {/* Action buttons */}
       {listing.user_id && (
-        <div className="border-t border-gray-100 flex divide-x divide-gray-100">
+        <div className="flex divide-x divide-gray-100">
           <FollowSellerButton sellerId={listing.user_id} variant="light" />
           <Link
             href={`/seller/${listing.user_id}`}
@@ -297,14 +333,18 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const ContactBlock = (
     <div className="space-y-2.5">
+      {/* Primary CTA: message */}
+      {listing.user_id && <ContactButton listingId={listing.id} sellerId={listing.user_id} />}
+
+      {/* Show number (only if seller hasn't hidden phone) */}
       {contactPhone && cleanPhone && (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-          <p className="text-xs text-gray-400 mb-2">{t(lang, 'contact_direct')}</p>
+          <p className="text-[11px] text-gray-400 font-medium mb-2 uppercase tracking-wide">{t(lang, 'contact_direct')}</p>
           <PhoneReveal phone={contactPhone} cleanPhone={cleanPhone} title={listing.title} />
         </div>
       )}
-      {listing.user_id && <ContactButton listingId={listing.id} sellerId={listing.user_id} />}
-      <FavoriteButton listingId={listing.id} initialCount={favCount ?? 0} viewsCount={listing.views_count ?? 0} />
+
+      {/* WhatsApp fallback (no phone, but seller has WhatsApp) */}
       {!contactPhone && whatsappLink && (
         <a href={whatsappLink} target="_blank"
           onClick={() => fetch('/api/track/click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: listing.id }) })}
@@ -312,6 +352,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {t(lang, 'whatsapp_contact')}
         </a>
       )}
+
+      {/* Save / Favourite */}
+      <FavoriteButton listingId={listing.id} initialCount={favCount ?? 0} viewsCount={listing.views_count ?? 0} />
     </div>
   )
 
@@ -359,19 +402,38 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
             {/* Titre & Prix — mobile only */}
             <div className="lg:hidden">
-              <h1 className="text-xl font-bold text-gray-900">{listing.title}</h1>
-              <p className="text-2xl font-bold text-black mt-1">{priceLabel}</p>
+              <h1 className="text-xl font-bold text-gray-900 leading-snug">{listing.title}</h1>
+              <p className="text-2xl font-extrabold mt-1" style={{ color: '#003F87' }}>{priceLabel}</p>
             </div>
 
             {/* Localisation & Catégorie */}
-            <div className="flex gap-3 text-sm text-gray-500">
-              {listing.location && <span>📍 {listing.location}</span>}
-              {listing.category && <span>• {CATEGORY_LABELS[listing.category]?.[lang] ?? listing.category}</span>}
+            <div className="flex flex-wrap gap-1.5">
+              {displayIsland && (
+                <span className="inline-flex items-center gap-1 bg-blue-50 px-2.5 py-1 rounded-full text-xs font-medium border border-blue-100" style={{ color: '#003F87' }}>
+                  🏝️ {displayIsland}
+                </span>
+              )}
+              {displayDistrict && (
+                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-xs font-medium">
+                  📍 {displayDistrict}
+                </span>
+              )}
+              {listing.category && (
+                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full text-xs font-medium">
+                  {categoryLabel}
+                </span>
+              )}
             </div>
 
             {/* Vendeur — mobile only */}
-            {listing.user_id && <div className="lg:hidden">{SellerCard}</div>}
-            {listing.user_id && <div className="lg:hidden"><SellerResponseBadge sellerId={listing.user_id} /></div>}
+            {listing.user_id && (
+              <div className="lg:hidden border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-sm">
+                {SellerCard}
+                <div className="border-t border-gray-100 px-4 py-3">
+                  <SellerResponseBadge sellerId={listing.user_id} />
+                </div>
+              </div>
+            )}
 
             {/* Contact — mobile only */}
             <div className="lg:hidden">{ContactBlock}</div>
@@ -423,16 +485,16 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                     const img = s.listing_images?.[0]?.image_url
                     return (
                       <Link key={s.id} href={listingHref(s)}
-                        className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100 hover:shadow-sm transition-shadow">
-                        <div className="relative w-full aspect-square bg-gray-100">
+                        className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all group">
+                        <div className="relative w-full aspect-[4/3] bg-gray-100">
                           {img
-                            ? <SafeImage src={img} alt={s.title} fill className="object-cover" />
+                            ? <SafeImage src={img} alt={s.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                             : <div className="w-full h-full flex items-center justify-center text-2xl text-gray-300">📷</div>
                           }
                         </div>
-                        <div className="p-2">
-                          <p className="text-xs font-medium line-clamp-2 text-gray-800">{s.title}</p>
-                          <p className="text-xs font-bold text-black mt-0.5">
+                        <div className="p-2.5">
+                          <p className="text-xs font-medium line-clamp-2 text-gray-800 leading-snug">{s.title}</p>
+                          <p className="text-xs font-bold mt-1" style={{ color: '#003F87' }}>
                             {s.price ? `${Number(s.price).toLocaleString()} SCR` : t(lang, 'negotiable')}
                           </p>
                         </div>
@@ -443,7 +505,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
-            <div className="flex justify-center pt-2 pb-4">
+            <div className="flex justify-center pt-2 pb-4 lg:hidden">
               <ReportButton listingId={listing.id} />
             </div>
             <Link href="/" className="block text-center text-sm text-gray-500 hover:text-black pb-6">
@@ -467,14 +529,19 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Contact */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-              {ContactBlock}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-4 pt-4 pb-0">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-3">Contact seller</p>
+              </div>
+              <div className="px-4 pb-4">
+                {ContactBlock}
+              </div>
             </div>
 
             {/* Vendeur */}
             {listing.user_id && (
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="p-4">{SellerCard}</div>
+              <div className="border border-gray-200 rounded-2xl bg-white overflow-hidden shadow-sm">
+                {SellerCard}
                 <div className="border-t border-gray-100 px-4 py-3">
                   <SellerResponseBadge sellerId={listing.user_id} />
                 </div>
@@ -489,6 +556,11 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             {/* Share */}
             <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
               <ShareButtons url={shareUrl} title={listing.title} price={priceLabel} />
+            </div>
+
+            {/* Report */}
+            <div className="flex justify-center">
+              <ReportButton listingId={listing.id} />
             </div>
           </div>
         </div>

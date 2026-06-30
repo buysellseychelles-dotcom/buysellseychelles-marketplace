@@ -11,4 +11,31 @@ if (!supabaseAnonKey) {
   throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is missing')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// The Supabase browser client stores sessions in localStorage by default, which
+// is invisible to Next.js Server Components. This adapter mirrors the session
+// cookie so that the /admin server page can verify the admin user server-side.
+const SESSION_KEY = `sb-sywutvsmoccbmylbocex-auth-token`
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7 days — matches Supabase refresh window
+
+const cookieSyncStorage = {
+  getItem: (key: string): string | null => localStorage.getItem(key),
+  setItem: (key: string, value: string): void => {
+    localStorage.setItem(key, value)
+    if (key === SESSION_KEY) {
+      const secure = location.protocol === 'https:' ? ';Secure' : ''
+      document.cookie = `${SESSION_KEY}=${encodeURIComponent(value)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax${secure}`
+    }
+  },
+  removeItem: (key: string): void => {
+    localStorage.removeItem(key)
+    if (key === SESSION_KEY) {
+      document.cookie = `${SESSION_KEY}=;path=/;max-age=0;SameSite=Lax`
+    }
+  },
+}
+
+export const supabase = createClient(
+  supabaseUrl,
+  supabaseAnonKey,
+  typeof window !== 'undefined' ? { auth: { storage: cookieSyncStorage } } : undefined
+)
