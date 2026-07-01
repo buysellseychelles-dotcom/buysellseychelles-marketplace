@@ -33,8 +33,9 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   // Pas de maximumScale/userScalable : le pinch-to-zoom volontaire reste possible
-  // (accessibilité). Le zoom intempestif au focus est bloqué par le font-size: 16px
-  // appliqué aux inputs dans globals.css.
+  // (accessibilité). Le zoom intempestif au focus est bloqué par le
+  // font-size: 16px !important appliqué aux inputs dans globals.css (le
+  // !important est requis pour battre les classes Tailwind type text-sm).
   // Le clavier virtuel redimensionne la zone de contenu : les champs et le
   // bandeau fixe bas remontent au-dessus du clavier au lieu d'être masqués.
   interactiveWidget: 'resizes-content',

@@ -62,12 +62,16 @@ html {
 }
 
 /* Empêche le zoom automatique d'iOS au focus d'un champ : la police doit faire
-   au moins 16px. Limité au mobile pour ne rien changer au design desktop. */
+   au moins 16px. Limité au mobile pour ne rien changer au design desktop.
+   !important est nécessaire : un sélecteur d'élément (input) a une spécificité
+   CSS plus faible qu'une classe Tailwind (ex. text-sm = 14px posée sur le
+   champ), donc cette règle perd face à text-sm quel que soit l'ordre des
+   règles dans la feuille de style, sans !important. */
 @media (max-width: 767px) {
   input,
   textarea,
   select {
-    font-size: 16px;
+    font-size: 16px !important;
   }
 }
 
