@@ -267,7 +267,7 @@ export default function EditListingPage() {
         orderedUrls.push(item.url)
       } else {
         const fileName = `${params.id}-${Date.now()}-${Math.random().toString(36).slice(2)}-${item.file.name}`
-        const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, item.file)
+        const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, item.file, { cacheControl: '31536000' })
         if (uploadError) {
           setError('Failed to upload photo. Please try again.')
           setSaving(false)
@@ -347,7 +347,8 @@ export default function EditListingPage() {
                   }}
                   className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 cursor-grab active:cursor-grabbing"
                 >
-                  <Image src={src} alt="" fill className="object-cover" />
+                  {/* src peut être un blob: local (nouvelle photo) ou une URL Supabase existante */}
+                  <Image src={src} alt="" fill className="object-cover" unoptimized />
                   {i === 0 && (
                     <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] font-bold text-center py-0.5">Main</span>
                   )}

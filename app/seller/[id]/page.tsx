@@ -79,7 +79,7 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-2xl font-bold shrink-0 relative">
             {profile.avatar_url
-              ? <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" unoptimized />
+              ? <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" />
               : initials}
           </div>
           <div className="flex-1 min-w-0">

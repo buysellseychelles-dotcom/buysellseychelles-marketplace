@@ -1,6 +1,6 @@
 ================================================================================
   BUYSELLSEYCHELLES.COM — RÉSUMÉ COMPLET DU PROJET
-  Généré le : 19 juin 2026 — Mis à jour le : 28 juin 2026
+  Généré le : 19 juin 2026 — Mis à jour le : 30 juin 2026
 ================================================================================
 
 
@@ -410,12 +410,10 @@ PWA — APPLICATION WEB PROGRESSIVE (état final, validée 28 juin 2026)
   ✓ Web Push VAPID (messages, avis, alertes, nouvelles annonces) via le SW
   ✓ Enregistrement / permission gérés par components/push-init.tsx
 
-APPLICATION NATIVE (React Native) — PHASE ULTÉRIEURE
-  La plateforme est actuellement distribuée comme PWA installable (suffisante pour
-  l'usage mobile : installation écran d'accueil, offline, push). Une application
-  native React Native (publication sur l'App Store iOS et le Google Play Store)
-  est PRÉVUE DANS UNE PHASE ULTÉRIEURE — non démarrée à ce jour. Elle réutilisera
-  les routes API et l'authentification Supabase existantes.
+APPLICATION NATIVE (React Native) — EN COURS
+  La plateforme est distribuée comme PWA installable. Une application native Expo /
+  React Native est EN DÉVELOPPEMENT (voir section 10 ci-dessous pour le détail
+  complet). Elle partage les routes API et l'authentification Supabase du web.
 
 BOOST / PROMOTION
   ✓ Boost annonce via Stripe (intégration fonctionnelle)
@@ -756,6 +754,105 @@ DISPUTE
   banners            id, image_url, link, active, position, created_at
 
 
+
+────────────────────────────────────────────────────────────────────────────────
+10. APPLICATION MOBILE REACT NATIVE (Expo)
+────────────────────────────────────────────────────────────────────────────────
+
+PRÉSENTATION
+  Projet       : Application native iOS + Android complémentaire à la PWA web
+  Chemin       : mobile/  (sous-dossier du dépôt principal)
+  Statut       : En développement avancé — noyau fonctionnel, stores en attente
+  Distribution : Via Expo Go (développement) → EAS Build → App Store / Play Store
+
+STACK TECHNIQUE MOBILE
+  Runtime      : Expo SDK 52
+  Framework    : React Native 0.76
+  Navigation   : Expo Router 4 (file-based, tab layout)
+  Langage      : TypeScript (typedRoutes activé)
+  Auth         : @supabase/supabase-js + expo-auth-session + expo-web-browser
+                 (email/password + OAuth Google via PKCE)
+  UI           : expo-linear-gradient, react-native-web
+  Médias       : expo-image-picker + expo-image-manipulator (sélection + compression photos)
+  Notifs       : expo-notifications (push natif iOS + Android)
+
+CONFIGURATION APP (app.json)
+  Bundle ID    : com.buysellseychelles.app
+  Scheme URL   : buysellseychelles://
+  Orientation  : portrait uniquement
+  Architecture : newArchEnabled = true (nouvelle arch React Native)
+  Splash       : backgroundColor #003F87 (sans image — à ajouter)
+  Assets       : Pas de dossier assets/ déclaré — build de prod impossible sans
+
+NOTE IDE
+  Les erreurs TypeScript dans VSCode sont des faux-positifs : la racine du
+  workspace n'est pas mobile/ donc l'IDE ne trouve pas node_modules. Le code
+  compile et tourne normalement avec expo start depuis mobile/.
+
+NAVIGATION — 5 ONGLETS (barre gradient 5 couleurs Seychelles)
+  Home     : Liste des annonces
+  Saved    : Annonces sauvegardées / favoris
+  [+ Post] : Bouton circulaire central surélevé → Publication d'annonce
+  Messages : Messagerie (conversations)
+  Me       : Profil / dashboard utilisateur (pastille notifs realtime)
+
+COMPOSANTS ET LIBRAIRIES CRÉÉS
+  components/navigation/GradientHeader.tsx — gradient 5 couleurs, back, logo, rightElement
+  components/home/CategoryBar.tsx          — 15 catégories scrollview horizontal
+  components/home/BannerCarousel.tsx       — auto-scroll 4s, dots, CTA
+  components/home/ListingCard.tsx          — image, badges Boost/Réservé, prix SCR/EUR
+  lib/categories.ts    — 15 catégories + ~70 sous-catégories EN+kreol + getTopCatForValue()
+  lib/districts.ts     — districts officiels Mahé (10) / Praslin (4) / La Digue (3)
+  lib/utils.ts         — formatPrice() + timeAgo()
+  lib/usePushNotifications.ts — hook push notifications Expo
+
+ÉTAT DES FONCTIONNALITÉS (30 juin 2026)
+
+  ✅ TERMINÉ
+    - Initialisation projet Expo, structure de navigation, tabs custom gradient
+    - Navigation 5 tabs : Home / Saved / [+Post central] / Messages / Me
+    - Authentification complète : email+password ET Google OAuth (PKCE)
+    - Page d'accueil : FlatList 2 colonnes, pagination, recherche debounced,
+      filtres catégorie/île/prix, carrousel de bannières auto-scroll
+    - Publication d'annonce : formulaire complet (titre, description, catégorie,
+      sous-catégorie, île, district, prix, devise SCR/EUR, photos avec compression,
+      champs conditionnels Vehicles/Real Estate/Jobs, toggle urgent + livraison)
+    - Dashboard profil (Me) : header gradient avec avatar réel, badges PRO/🪪,
+      stats 4 cases (Listings/Vues/Saves/Messages), banner complétion profil, menu
+    - Mes annonces : stats par annonce (👁/❤️/💬), badges Boosted/Expired/Sold,
+      actions Edit + Mark sold/Re-activate + Delete (confirmation + suppression storage)
+    - Édition annonce : titre, description, prix, devise, statut, photos
+    - Édition profil : avatar (upload+compression→Storage bucket Avatars),
+      nom, WhatsApp, île (dropdown), bio, toggle photo visible, toggle téléphone
+    - Vérification d'identité : 4 états (none/pending orange/approved vert/rejected rouge),
+      upload document → /api/verify-identity
+    - Abonnement PRO + boost : plans 230 SCR/mois + boosts 75/150/300 SCR → redirect web
+    - Notifications in-app : liste avec pastille cloche realtime sur tab Me
+
+  🔶 PARTIEL (écran vide ou stub)
+    - Favoris (Saved) : écran présent, pas de logique Supabase connectée
+    - Messagerie liste : écran statique vide
+    - Page annonce individuelle listing/[id] : placeholder uniquement
+    - Profil vendeur seller/[id] : placeholder uniquement
+    - Conversation chat conversation/[id] : placeholder uniquement
+
+  ❌ NON DÉMARRÉ
+    - Assets app (icône + splash image réelle) — requis pour EAS Build
+    - Préparation stores : eas.json, App Store Connect, Google Play Console
+
+EN ATTENTE / STAND-BY
+  - Build EAS et soumission stores : à faire après finalisation du développement.
+    Coûts : Apple Developer Program 99 $/an (requis pour iOS),
+    Google Play Console 25 $ (paiement unique).
+
+COMMANDES UTILES
+  Lancer en développement (tunnel Expo Go) :
+    cd mobile
+    npx expo start --tunnel
+
+  (--tunnel connecte un appareil physique via QR code sans être sur le même Wi-Fi.)
+
+
 ================================================================================
-  FIN DU DOCUMENT — buysellseychelles.com — 28 juin 2026
+  FIN DU DOCUMENT — buysellseychelles.com — 30 juin 2026
 ================================================================================

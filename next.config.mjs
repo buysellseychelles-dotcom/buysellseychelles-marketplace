@@ -6,7 +6,18 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // Optimisation + cache CDN Vercel activés pour les images Supabase Storage
+    // (avant : unoptimized:true forçait chaque visiteur à retélécharger l'original
+    // depuis Supabase à chaque vue, sans aucun cache intermédiaire).
+    remotePatterns: [
+      // '/storage/v1/**' couvre à la fois /object/public/ (URLs normales) et
+      // /render/image/public/ (variante basse résolution utilisée par lib/image-quality.ts).
+      { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/**' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
+    // Les fichiers Storage ont un nom unique par upload (timestamp/uuid) : un cache
+    // long est donc sûr (une nouvelle photo = une nouvelle URL, jamais de contenu périmé).
+    minimumCacheTTL: 31536000,
   },
   async headers() {
     return [

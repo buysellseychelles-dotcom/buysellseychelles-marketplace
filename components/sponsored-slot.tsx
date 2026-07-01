@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import Image from 'next/image'
+import { isOptimizableUrl } from '@/lib/image-quality'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,7 +41,7 @@ export default async function SponsoredSlot() {
             alt={data.title}
             fill
             className="object-cover"
-            unoptimized
+            unoptimized={!isOptimizableUrl(data.image_url)}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex flex-col justify-center px-4">
             <p className="text-white font-bold text-base leading-tight">{data.title}</p>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { deleteListingPhotos, deleteListingNotifications } from '@/lib/storage-cleanup'
+import { isAdminUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +9,10 @@ const supabase = createClient(
 )
 
 export async function POST(req: Request) {
+  if (!(await isAdminUser())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const form = await req.formData()
   const listingId = form.get('listingId') as string
   const reportId  = form.get('reportId')  as string

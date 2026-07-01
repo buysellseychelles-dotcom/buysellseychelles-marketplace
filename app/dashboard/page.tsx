@@ -290,7 +290,7 @@ export default function DashboardPage() {
               title="Change photo"
             >
               {profile.avatar_url ? (
-                <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" unoptimized />
+                <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white" style={{ backgroundColor: '#003F87' }}>
                   {initials}

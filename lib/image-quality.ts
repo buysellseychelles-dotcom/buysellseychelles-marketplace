@@ -34,3 +34,18 @@ export function transformImageUrl(url: string, { width, quality }: TransformOpts
 export function lowResUrl(url: string, width = 480): string {
   return transformImageUrl(url, { width, quality: 35 })
 }
+
+/**
+ * Vrai si l'URL correspond à un host autorisé dans next.config.mjs (remotePatterns),
+ * donc optimisable/cachable par Next-Image. Sert à décider `unoptimized` pour les champs
+ * libres (ex: image_url des bannières admin) qui peuvent pointer vers n'importe quel host.
+ */
+export function isOptimizableUrl(url: string): boolean {
+  if (!url) return false
+  try {
+    const { hostname } = new URL(url)
+    return hostname.endsWith('.supabase.co') || hostname === 'images.unsplash.com'
+  } catch {
+    return false
+  }
+}

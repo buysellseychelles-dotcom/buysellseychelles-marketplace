@@ -269,7 +269,7 @@ export default function PostAdPage() {
       await Promise.all(
         files.map(async (file, i) => {
           const fileName = `${listing.id}-${Date.now()}-${i}-${file.name}`
-          const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, file)
+          const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, file, { cacheControl: '31536000' })
           if (uploadError) return null
           return supabase.storage.from('listings').getPublicUrl(fileName).data.publicUrl
         })
@@ -350,7 +350,8 @@ export default function PostAdPage() {
                 }}
                 onDragEnd={() => setDragIndex(null)}
                 className={`relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 cursor-grab active:cursor-grabbing transition-opacity ${dragIndex === i ? 'opacity-50' : 'opacity-100'}`}>
-                <Image src={src} alt="" fill className="object-cover" />
+                {/* Aperçu local (blob:) avant upload — non passable au loader distant Next/Vercel */}
+                <Image src={src} alt="" fill className="object-cover" unoptimized />
                 {i === 0 && (
                   <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] font-bold text-center py-0.5">
                     Main

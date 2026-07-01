@@ -19,9 +19,25 @@ export default function LoginClient() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) router.push('/dashboard')
+      if (user) {
+        resetViewportZoom()
+        router.push('/dashboard')
+      }
     })
   }, [router])
+
+  // iOS garde le niveau de zoom appliqué au focus d'un champ même après une
+  // navigation côté client (le document ne se recharge pas). On force le
+  // viewport à se recalculer à scale=1 avant de quitter la page de login.
+  const resetViewportZoom = () => {
+    const meta = document.querySelector('meta[name="viewport"]')
+    if (!meta) return
+    const original = meta.getAttribute('content') || 'width=device-width, initial-scale=1'
+    meta.setAttribute('content', `${original}, maximum-scale=1`)
+    requestAnimationFrame(() => {
+      meta.setAttribute('content', original)
+    })
+  }
 
   const handleSubmit = async () => {
     if (loading) return
@@ -42,6 +58,7 @@ export default function LoginClient() {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password })
       setLoading(false)
       if (err) { setError(err.message); return }
+      resetViewportZoom()
       router.push('/dashboard')
     } else {
       const { error: err } = await supabase.auth.signUp({
@@ -122,6 +139,7 @@ export default function LoginClient() {
                 placeholder="your@email.com"
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                style={{ fontSize: '16px' }}
               />
             </div>
             <div>
@@ -134,6 +152,7 @@ export default function LoginClient() {
                   placeholder={mode === 'signup' ? 'Min. 6 characters' : '••••••••'}
                   onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  style={{ fontSize: '16px' }}
                 />
                 <button
                   type="button"

@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { useLang } from '@/lib/lang-context'
 import { t } from '@/lib/i18n'
 import { fileTooLarge } from '@/lib/upload-limits'
+import { compressImage } from '@/lib/compress-image'
 import TenantDossierModal from '@/components/tenant-dossier-modal'
 import ReviewForm from '@/components/review-form'
 
@@ -224,9 +225,10 @@ export default function ChatPage() {
       if (imgInputRef.current) imgInputRef.current.value = ''
       return
     }
-    const ext = file.name.split('.').pop() ?? 'jpg'
+    const compressed = await compressImage(file)
+    const ext = compressed.name.split('.').pop() ?? 'jpg'
     const fileName = `chat/${convId}-${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, file)
+    const { error: uploadError } = await supabase.storage.from('listings').upload(fileName, compressed, { cacheControl: '31536000' })
     if (!uploadError) {
       const { data } = supabase.storage.from('listings').getPublicUrl(fileName)
       const imageMsg = `__img__:${data.publicUrl}`
@@ -415,7 +417,7 @@ export default function ChatPage() {
                 {msg.message.startsWith('__img__:') ? (
                   <div>
                     <div className="relative w-52 h-40 rounded-2xl overflow-hidden">
-                      <Image src={msg.message.slice(8)} alt="Photo" fill className="object-cover" unoptimized />
+                      <Image src={msg.message.slice(8)} alt="Photo" fill className="object-cover" />
                     </div>
                     <p className="text-[10px] mt-1 text-gray-400 text-right">
                       {new Date(msg.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}

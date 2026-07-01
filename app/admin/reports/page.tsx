@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { isAdminUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-
-export const revalidate = 30
 
 const REASON_LABELS: Record<string, string> = {
   fake: 'Fraudulent listing or scam',
@@ -27,6 +27,8 @@ const REASON_LABELS: Record<string, string> = {
 }
 
 export default async function ReportsPage() {
+  if (!(await isAdminUser())) redirect('/')
+
   const { data: reports } = await supabase
     .from('reports')
     .select('*, listings(id, title, status), profiles!reports_reported_user_id_fkey(id, full_name, avatar_url)')

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useLang } from '@/lib/lang-context'
 import { t } from '@/lib/i18n'
+import { isOptimizableUrl } from '@/lib/image-quality'
 
 type Slide = {
   id: string
@@ -93,7 +94,9 @@ export default function BannerCarousel({ banners = [] }: { banners?: Slide[] }) 
 
         {s.image_url ? (
           <>
-            <Image src={s.image_url} alt={s.title} fill className="object-cover" unoptimized />
+            {/* image_url est un champ libre côté admin (app/admin/banners) : seules les
+                URLs Supabase/Unsplash passent par l'optimiseur Next, le reste reste tel quel. */}
+            <Image src={s.image_url} alt={s.title} fill className="object-cover" unoptimized={!isOptimizableUrl(s.image_url)} />
             <div className="absolute inset-0 bg-gradient-to-r from-black/65 to-black/10" />
           </>
         ) : (

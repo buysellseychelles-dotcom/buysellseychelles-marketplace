@@ -238,7 +238,7 @@ export default function AppHeader() {
             <button onClick={() => setMenuOpen(!menuOpen)}
               className="relative w-9 h-9 rounded-full overflow-hidden bg-black text-white text-sm font-bold flex items-center justify-center hover:ring-2 hover:ring-gray-300 transition-all">
               {avatarUrl
-                ? <Image src={avatarUrl} alt="Avatar" fill className="object-cover" unoptimized />
+                ? <Image src={avatarUrl} alt="Avatar" fill className="object-cover" />
                 : <span>{initials}</span>
               }
               {unreadNotifs > 0 && (
@@ -255,7 +255,7 @@ export default function AppHeader() {
                   <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-black text-white text-xs font-bold flex items-center justify-center shrink-0 relative">
                       {avatarUrl
-                        ? <Image src={avatarUrl} alt="Avatar" fill className="object-cover" unoptimized />
+                        ? <Image src={avatarUrl} alt="Avatar" fill className="object-cover" />
                         : <span>{initials}</span>
                       }
                     </div>

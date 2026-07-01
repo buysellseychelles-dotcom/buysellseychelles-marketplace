@@ -31,7 +31,6 @@ export default function SafeImage({ src, alt, fill, className, width, height }: 
         fill
         className={className}
         onError={() => setError(true)}
-        unoptimized
       />
     )
   }
@@ -44,7 +43,6 @@ export default function SafeImage({ src, alt, fill, className, width, height }: 
       height={height}
       className={className}
       onError={() => setError(true)}
-      unoptimized
     />
   )
 }

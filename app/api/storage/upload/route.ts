@@ -32,7 +32,9 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer()
     const { error } = await supabaseAdmin.storage
       .from(bucket)
-      .upload(path, bytes, { contentType: file.type, upsert: true })
+      // Cache long : les avatars/documents sont soit sur un chemin fixe re-uploadé avec
+      // un ?t= de cache-busting côté appelant, soit sur un chemin unique par upload.
+      .upload(path, bytes, { contentType: file.type, upsert: true, cacheControl: '31536000' })
 
     if (error) {
       return Response.json({ error: error.message }, { status: 500 })

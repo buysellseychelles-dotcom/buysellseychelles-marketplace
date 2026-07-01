@@ -64,7 +64,11 @@ function getSessionFromCookies(request: NextRequest): { email?: string } | null 
   if (!cookieValue) return null
 
   try {
-    const parsed = JSON.parse(cookieValue)
+    // Le cookie est écrit via encodeURIComponent (lib/supabase.ts) — le décoder
+    // avant JSON.parse, sinon le parsing échoue systématiquement.
+    let decoded = cookieValue
+    try { decoded = decodeURIComponent(cookieValue) } catch { /* déjà décodé */ }
+    const parsed = JSON.parse(decoded)
     const accessToken = parsed.access_token
     if (!accessToken) return null
 
@@ -78,7 +82,7 @@ function getSessionFromCookies(request: NextRequest): { email?: string } | null 
   }
 }
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const ua = request.headers.get('user-agent') ?? ''
 

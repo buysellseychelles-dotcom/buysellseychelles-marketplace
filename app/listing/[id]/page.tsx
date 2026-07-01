@@ -264,7 +264,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {/* Avatar */}
           <div className="w-14 h-14 rounded-full bg-white/20 overflow-hidden flex items-center justify-center text-white text-xl font-bold shrink-0 relative border-2 border-white/40">
             {profile?.avatar_url && profile?.show_avatar_in_listings !== false
-              ? <Image src={profile.avatar_url} alt="" fill className="object-cover" unoptimized />
+              ? <Image src={profile.avatar_url} alt="" fill className="object-cover" />
               : (sellerDisplayName || '?')[0]?.toUpperCase()
             }
             {/* Online dot */}
