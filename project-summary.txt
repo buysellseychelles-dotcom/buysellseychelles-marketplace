@@ -853,6 +853,16 @@ COMMANDES UTILES
   (--tunnel connecte un appareil physique via QR code sans être sur le même Wi-Fi.)
 
 
+────────────────────────────────────────────────────────────────────────────────
+11. STAND-BY / À ÉVALUER PLUS TARD
+────────────────────────────────────────────────────────────────────────────────
+
+  ⏳ Optimisation requêtes N+1 sur les conversations et les requêtes realtime
+     (Supabase) — à évaluer si la charge augmente après le lancement.
+  ℹ️  Cache Supabase Storage : non fonctionnel sur le plan gratuit. Le cache
+     Vercel est actif et jugé suffisant pour l'instant.
+
+
 ================================================================================
   FIN DU DOCUMENT — buysellseychelles.com — 30 juin 2026
 ================================================================================

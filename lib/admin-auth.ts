@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
-// Supabase project ref — used to locate the auth cookie. Mirrors the inline
-// logic that already guards app/admin/page.tsx.
+// Supabase project ref — used to locate the auth cookie.
 const PROJECT_REF = 'sywutvsmoccbmylbocex'
 
 // Resolves the currently logged-in Supabase user from the auth cookie, or null.
@@ -13,13 +12,20 @@ export async function getAdminUser() {
     cookieStore.get(`sb-${PROJECT_REF}-auth-token.0`)?.value
   if (!tokenCookie) return null
   try {
-    const { access_token } = JSON.parse(decodeURIComponent(tokenCookie))
+    const { access_token, refresh_token } = JSON.parse(decodeURIComponent(tokenCookie))
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
     const { data: { user } } = await supabase.auth.getUser(access_token)
-    return user
+    if (user) return user
+
+    // Access token expired (e.g. hard navigation before the browser client had
+    // a chance to auto-refresh it) — fall back to the refresh token stored in
+    // the same cookie so a still-valid session isn't treated as logged out.
+    if (!refresh_token) return null
+    const { data: refreshed } = await supabase.auth.refreshSession({ refresh_token })
+    return refreshed.user ?? null
   } catch {
     return null
   }

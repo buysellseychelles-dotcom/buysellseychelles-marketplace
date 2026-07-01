@@ -1,27 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { deleteListingNotifications } from '@/lib/storage-cleanup'
+import { getAdminUser } from '@/lib/admin-auth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-
-async function getAdminUser() {
-  const cookieStore = await cookies()
-  const projectRef = 'sywutvsmoccbmylbocex'
-  const tokenCookie =
-    cookieStore.get(`sb-${projectRef}-auth-token`)?.value ||
-    cookieStore.get(`sb-${projectRef}-auth-token.0`)?.value
-  if (!tokenCookie) return null
-  try {
-    const { access_token } = JSON.parse(decodeURIComponent(tokenCookie))
-    const { data: { user } } = await supabase.auth.getUser(access_token)
-    return user
-  } catch { return null }
-}
 
 export default async function AdminPage() {
   const user = await getAdminUser()
