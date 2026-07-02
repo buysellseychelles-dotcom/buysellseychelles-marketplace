@@ -326,6 +326,15 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {email === 'buysellseychelles@gmail.com' && (
+              <Link
+                href="/admin"
+                title="Admin panel"
+                className="border border-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded-full hover:bg-gray-100 bg-white"
+              >
+                🛠 Admin
+              </Link>
+            )}
             <button
               onClick={() => setEditing(!editing)}
               className="border border-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded-full hover:bg-gray-100 bg-white"

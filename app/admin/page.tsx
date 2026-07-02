@@ -114,10 +114,13 @@ export default async function AdminPage() {
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-1">
         <h1 className="text-xl font-bold">🛠 Administration</h1>
-        <span className="text-xs text-gray-400">{user.email}</span>
+        <Link href="/dashboard" className="text-xs text-gray-500 border border-gray-200 rounded-full px-3 py-1.5 hover:bg-gray-50 shrink-0">
+          ← Dashboard
+        </Link>
       </div>
+      <p className="text-xs text-gray-400 mb-6">{user.email}</p>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-6">
