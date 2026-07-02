@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { deleteListingPhotos, deleteListingNotifications } from '@/lib/storage-cleanup'
 
 const supabase = createClient(
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     // 🔥 vérifie propriété annonce
     const { data: listing } = await supabase
       .from('listings')
-      .select('id, user_id')
+      .select('id, user_id, category')
       .eq('id', id)
       .single()
 
@@ -63,6 +64,13 @@ export async function POST(req: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // ⚡ purge immédiate du cache Home + catégories (sinon l'annonce reste
+    // visible jusqu'à l'expiration du cache de 30 s)
+    revalidateTag('home-data', 'max')
+    revalidatePath('/')
+    revalidatePath('/category/[slug]', 'layout')
+    if (listing.category) revalidatePath(`/category/${listing.category}`)
 
     return NextResponse.json({ ok: true })
 

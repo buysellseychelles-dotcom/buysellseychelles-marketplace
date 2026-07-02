@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { deleteListingPhotos, deleteListingNotifications } from '@/lib/storage-cleanup'
 import { isAdminUser } from '@/lib/admin-auth'
 
@@ -25,6 +26,11 @@ export async function POST(req: Request) {
   await deleteListingNotifications(supabase, [listingId])
   await supabase.from('listings').delete().eq('id', listingId)
   if (reportId) await supabase.from('reports').update({ resolved: true }).eq('id', reportId)
+
+  // ⚡ purge immédiate du cache Home + catégories
+  revalidateTag('home-data', 'max')
+  revalidatePath('/')
+  revalidatePath('/category/[slug]', 'layout')
 
   return NextResponse.redirect(new URL('/admin/reports', req.url))
 }

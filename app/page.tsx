@@ -79,7 +79,7 @@ const CATEGORY_GROUP_MAP: Record<string, string[]> = {
 
 // Données de la page d'accueil (bannières + sections + vendeurs PRO).
 // Identiques pour tous les visiteurs (indépendantes de la langue / des filtres),
-// donc mises en cache 60 s : les visites répétées sur Home évitent les
+// donc mises en cache 30 s : les visites répétées sur Home évitent les
 // ~16 allers-retours Supabase et deviennent quasi instantanées côté serveur.
 const getHomeData = unstable_cache(
   async () => {
@@ -120,7 +120,7 @@ const getHomeData = unstable_cache(
     return { bannerData: bannerData ?? [], sectionData, proSellerIds }
   },
   ['home-data'],
-  { revalidate: 60 },
+  { revalidate: 30, tags: ['home-data'] },
 )
 
 export default async function HomePage({ searchParams }: { searchParams?: SearchParams }) {
