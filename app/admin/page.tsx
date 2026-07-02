@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { deleteListingNotifications } from '@/lib/storage-cleanup'
 import { getAdminUser } from '@/lib/admin-auth'
+import { ConfirmForm } from '@/components/admin/confirm-form'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -254,11 +255,11 @@ export default async function AdminPage() {
                               </button>
                             </form>
                           )}
-                          <form action={deleteUser.bind(null, p.id)} onSubmit={(e) => { if (!confirm(`Delete ${authUser?.email ?? p.full_name} permanently?`)) e.preventDefault() }}>
+                          <ConfirmForm action={deleteUser.bind(null, p.id)} confirmMessage={`Delete ${authUser?.email ?? p.full_name} permanently?`}>
                             <button className="text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-red-300 text-red-700 bg-red-50 hover:bg-red-100">
                               🗑 Delete
                             </button>
-                          </form>
+                          </ConfirmForm>
                         </div>
                       )}
                     </div>
