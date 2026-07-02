@@ -12,21 +12,20 @@ export async function getAdminUser() {
     cookieStore.get(`sb-${PROJECT_REF}-auth-token.0`)?.value
   if (!tokenCookie) return null
   try {
-    const { access_token } = JSON.parse(decodeURIComponent(tokenCookie))
+    const { access_token, refresh_token } = JSON.parse(decodeURIComponent(tokenCookie))
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    // Deliberately no refreshSession() fallback here: it rotates the refresh
-    // token server-side but this Server Component has no way to write the new
-    // token pair back into the browser's cookie. The browser's own Supabase
-    // client would then retry with the now-invalidated refresh token on its
-    // next auto-refresh, killing the session for good until a real re-login.
-    // A cold navigation with an expired access token just bounces to '/' once;
-    // the browser client's background auto-refresh fixes the cookie for the
-    // next visit.
     const { data: { user } } = await supabase.auth.getUser(access_token)
-    return user
+    if (user) return user
+
+    // Access token expired (e.g. hard navigation before the browser client had
+    // a chance to auto-refresh it) — fall back to the refresh token stored in
+    // the same cookie so a still-valid session isn't treated as logged out.
+    if (!refresh_token) return null
+    const { data: refreshed } = await supabase.auth.refreshSession({ refresh_token })
+    return refreshed.user ?? null
   } catch {
     return null
   }

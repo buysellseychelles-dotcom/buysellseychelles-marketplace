@@ -23,6 +23,9 @@ export default async function AdminPage() {
     supabase.from('reports').select('id', { count: 'exact', head: true }).eq('resolved', false),
   ])
 
+  // De-duplicate by id in case the profiles query returns the same user more than once.
+  const uniqueProfiles = Array.from(new Map((profiles ?? []).map((p: any) => [p.id, p])).values())
+
   const now = new Date()
   const activeBoosts = (listings ?? []).filter((l: any) =>
     l.boosted && l.boost_expires_at && new Date(l.boost_expires_at) > now
@@ -218,12 +221,12 @@ export default async function AdminPage() {
       </div>
 
       {/* ── UTILISATEURS ──────────────────────────────── */}
-      {profiles && profiles.length > 0 && (
+      {uniqueProfiles.length > 0 && (
         <div className="mb-6" id="users">
-          <h2 className="font-bold text-gray-800 mb-3">👥 Users ({profiles.length})</h2>
+          <h2 className="font-bold text-gray-800 mb-3">👥 Users ({uniqueProfiles.length})</h2>
           <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
             <div className="divide-y divide-gray-50">
-              {profiles.map((p: any) => {
+              {uniqueProfiles.map((p: any) => {
                 const authUser = users?.users?.find((u: any) => u.id === p.id)
                 const isBanned = authUser?.banned_until && new Date(authUser.banned_until) > new Date()
                 const isAdmin = authUser?.email === process.env.ADMIN_EMAIL
