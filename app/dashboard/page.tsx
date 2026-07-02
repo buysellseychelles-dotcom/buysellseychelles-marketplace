@@ -10,6 +10,7 @@ import { t } from '@/lib/i18n'
 import { formatPrice } from '@/lib/utils'
 import { fileTooLarge, fileExceedsRaw } from '@/lib/upload-limits'
 import { compressImage } from '@/lib/compress-image'
+import { ensureDisplayName } from '@/lib/display-name'
 
 type Profile = {
   full_name: string
@@ -81,7 +82,13 @@ export default function DashboardPage() {
         .eq('id', user.id)
         .single()
 
-      if (prof) setProfile({ full_name: prof.full_name ?? '', whatsapp: prof.whatsapp ?? '', bio: prof.bio ?? '', island: prof.island ?? '', avatar_url: prof.avatar_url ?? '', show_avatar_in_listings: prof.show_avatar_in_listings ?? true, phone_hidden: prof.phone_hidden ?? false })
+      if (prof) {
+        let fullName = prof.full_name ?? ''
+        if (!fullName || fullName.toLowerCase() === (user.email ?? '').toLowerCase()) {
+          fullName = await ensureDisplayName(supabase, user.id, user.email)
+        }
+        setProfile({ full_name: fullName, whatsapp: prof.whatsapp ?? '', bio: prof.bio ?? '', island: prof.island ?? '', avatar_url: prof.avatar_url ?? '', show_avatar_in_listings: prof.show_avatar_in_listings ?? true, phone_hidden: prof.phone_hidden ?? false })
+      }
 
       const { data: lst } = await supabase
         .from('listings')

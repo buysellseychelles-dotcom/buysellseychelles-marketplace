@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { ensureDisplayName } from '@/lib/display-name'
 
 const FLAG = 'linear-gradient(135deg, #003F87 0%, #003F87 20%, #FCD116 40%, #BE0027 55%, #FFFFFF 72%, #007A3D 88%, #007A3D 100%)'
 
@@ -23,6 +24,7 @@ export default function AuthCallback() {
       if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
         setHasSession(true)
         setStatus('success')
+        ensureDisplayName(supabase, session.user.id, session.user.email)
       }
     })
 
@@ -34,6 +36,7 @@ export default function AuthCallback() {
         // On montre toujours la page de bienvenue
         if (!error && data.session) {
           setHasSession(true)
+          ensureDisplayName(supabase, data.session.user.id, data.session.user.email)
         }
         setStatus('success')
         return
@@ -45,6 +48,7 @@ export default function AuthCallback() {
         if (session) {
           setHasSession(true)
           setStatus('success')
+          ensureDisplayName(supabase, session.user.id, session.user.email)
         } else {
           // Pas de session mais peut-être flux hash en cours
           const hasToken = hashParams.get('access_token')
