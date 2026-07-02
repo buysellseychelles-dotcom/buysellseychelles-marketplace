@@ -23,13 +23,19 @@ const cookieSyncStorage = {
     localStorage.setItem(key, value)
     if (key === SESSION_KEY) {
       const secure = location.protocol === 'https:' ? ';Secure' : ''
-      document.cookie = `${SESSION_KEY}=${encodeURIComponent(value)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax${secure}`
+      // Share the cookie between the apex domain and `www` so a session
+      // started on one is recognized on the other — without this, a cookie
+      // set on www.buysellseychelles.com is host-only and never sent to
+      // buysellseychelles.com (and vice versa).
+      const domain = location.hostname.endsWith('buysellseychelles.com') ? ';Domain=.buysellseychelles.com' : ''
+      document.cookie = `${SESSION_KEY}=${encodeURIComponent(value)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax${domain}${secure}`
     }
   },
   removeItem: (key: string): void => {
     localStorage.removeItem(key)
     if (key === SESSION_KEY) {
-      document.cookie = `${SESSION_KEY}=;path=/;max-age=0;SameSite=Lax`
+      const domain = location.hostname.endsWith('buysellseychelles.com') ? ';Domain=.buysellseychelles.com' : ''
+      document.cookie = `${SESSION_KEY}=;path=/;max-age=0;SameSite=Lax${domain}`
     }
   },
 }
