@@ -223,7 +223,7 @@ function LoginContent() {
         <p className="text-gray-500 text-sm mb-6">{t(lang, 'forgot_desc')}</p>
         {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">{error}</div>}
         <input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-black" />
+          className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base mb-4 focus:outline-none focus:ring-2 focus:ring-black" />
         <button onClick={handleForgotPassword} disabled={loading}
           className="w-full text-white rounded-lg py-3 text-sm font-medium disabled:opacity-50 mb-3 hover:opacity-90 transition-opacity"
           style={{ backgroundColor: '#003F87' }}>
@@ -277,13 +277,13 @@ function LoginContent() {
             <input type="email" placeholder="Email" value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleSignup())}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black" />
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black" />
             <div>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password}
                   onChange={e => setPassword(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (tab === 'login' ? handleLogin() : handleSignup())}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-black" />
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-11 text-base focus:outline-none focus:ring-2 focus:ring-black" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(s => !s)}

@@ -1,4 +1,4 @@
-const CACHE = 'bss-v3'
+const CACHE = 'bss-v4'
 
 const PRECACHE = [
   '/',          // Home
