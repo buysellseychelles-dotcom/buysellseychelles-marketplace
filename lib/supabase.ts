@@ -28,7 +28,15 @@ const cookieSyncStorage = {
       // set on www.buysellseychelles.com is host-only and never sent to
       // buysellseychelles.com (and vice versa).
       const domain = location.hostname.endsWith('buysellseychelles.com') ? ';Domain=.buysellseychelles.com' : ''
-      document.cookie = `${SESSION_KEY}=${encodeURIComponent(value)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax${domain}${secure}`
+      // Only mirror the tokens, not the full session (user/app_metadata etc.) —
+      // that full JSON can exceed ~4KB, which browsers silently refuse to store
+      // as a cookie, so the server-side admin check never sees a session at all.
+      let cookiePayload = value
+      try {
+        const { access_token, refresh_token } = JSON.parse(value)
+        cookiePayload = JSON.stringify({ access_token, refresh_token })
+      } catch { /* keep mirroring the raw value if it doesn't parse */ }
+      document.cookie = `${SESSION_KEY}=${encodeURIComponent(cookiePayload)};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax${domain}${secure}`
     }
   },
   removeItem: (key: string): void => {
