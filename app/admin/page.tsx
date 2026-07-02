@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { deleteListingNotifications } from '@/lib/storage-cleanup'
 import { getAdminUser } from '@/lib/admin-auth'
 import { ConfirmForm } from '@/components/admin/confirm-form'
+import { getDisplayName } from '@/lib/display-name'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -231,7 +232,7 @@ export default async function AdminPage() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium flex items-center gap-1.5 flex-wrap">
-                          {p.full_name || authUser?.email || 'Anonymous'}
+                          {getDisplayName(p.full_name, 'Anonymous')}
                           {p.verified && <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">✓ Verified</span>}
                           {isBanned && <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">🚫 Banned</span>}
                           {isAdmin && <span className="bg-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">Admin</span>}

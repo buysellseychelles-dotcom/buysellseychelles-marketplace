@@ -10,6 +10,7 @@ import SellerReviewSection from '@/components/seller-review-section'
 import ReportUserButton from '@/components/report-user-button'
 import FollowSellerButton from '@/components/follow-seller-button'
 import { listingHref } from '@/lib/slug'
+import { getDisplayName } from '@/lib/display-name'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,7 +24,7 @@ const supabaseAdmin = createClient(
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const { data } = await supabaseAdmin.from('profiles').select('full_name').eq('id', id).single()
-  const name = data?.full_name?.trim() || 'Seller'
+  const name = getDisplayName(data?.full_name, 'Seller')
   return {
     title: `${name} – Seller Profile | BuySellSeychelles`,
     description: `See all listings by ${name} on BuySellSeychelles.`,
@@ -45,14 +46,7 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
   // Profil générique si aucun profil trouvé
   const profile = seller ?? { full_name: null, island: null, bio: null, verified: false, id_verified: false, avatar_url: null, is_pro: false, created_at: new Date().toISOString() }
 
-  // Fallback name from auth email only if full_name is truly empty
-  let displayName = profile.full_name?.trim() || null
-  if (!displayName) {
-    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(id)
-    const email = authData?.user?.email
-    if (email) displayName = email.split('@')[0]
-  }
-  displayName = displayName || 'User'
+  const displayName = getDisplayName(profile.full_name)
 
   const initials = displayName[0]?.toUpperCase() ?? '?'
   const memberSince = new Date(profile.created_at).toLocaleDateString('en', { month: 'long', year: 'numeric' })

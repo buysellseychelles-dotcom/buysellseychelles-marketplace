@@ -25,6 +25,7 @@ import FollowSellerButton from '@/components/follow-seller-button'
 import ReviewStars from '@/components/review-stars'
 import { formatPrice } from '@/lib/utils'
 import { t, tOption, type Lang } from '@/lib/i18n'
+import { getDisplayName } from '@/lib/display-name'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -114,13 +115,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .eq('id', listing.user_id)
     .maybeSingle()
 
-  // Display name: use full_name (the "Display name" field), fallback to email prefix only if empty
-  let sellerDisplayName = profile?.full_name?.trim() || null
-  if (!sellerDisplayName && listing.user_id) {
-    const { data: authData } = await supabaseAdmin.auth.admin.getUserById(listing.user_id)
-    const email = authData?.user?.email
-    if (email) sellerDisplayName = email.split('@')[0]
-  }
+  const sellerDisplayName = getDisplayName(profile?.full_name)
 
   const { data: images } = await supabase
     .from('listing_images')
