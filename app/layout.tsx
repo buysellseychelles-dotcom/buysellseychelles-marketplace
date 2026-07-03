@@ -8,6 +8,7 @@ import OnlineTracker from '@/components/online-tracker'
 import PushInit from '@/components/push-init'
 import CookieBanner from '@/components/cookie-banner'
 import InstallPrompt from '@/components/install-prompt'
+import InAppBrowserBanner from '@/components/in-app-browser-banner'
 import { LangProvider } from '@/lib/lang-context'
 import { SITE_URL, SITE_NAME } from '@/lib/site'
 
@@ -174,6 +175,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LangProvider>
           <OnlineTracker />
           <PushInit />
+          <InAppBrowserBanner />
           <AppHeader />
           {children}
           <SiteFooter />

@@ -13,6 +13,9 @@ if (dsn) {
     ignoreErrors: [
       'ResizeObserver loop limit exceeded',
       'ResizeObserver loop completed with undelivered notifications',
+      // Bruit spécifique aux navigateurs intégrés Facebook / Instagram (in-app browser)
+      'Error invoking enableButtonsClickedMetaDataLogging: Java object is gone',
+      "undefined is not an object (evaluating 'window.webkit.messageHandlers')",
     ],
   })
 }
