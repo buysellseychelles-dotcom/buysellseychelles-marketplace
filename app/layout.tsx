@@ -7,7 +7,6 @@ import SiteFooter from '@/components/site-footer'
 import OnlineTracker from '@/components/online-tracker'
 import PushInit from '@/components/push-init'
 import CookieBanner from '@/components/cookie-banner'
-import InstallPrompt from '@/components/install-prompt'
 import InAppBrowserBanner from '@/components/in-app-browser-banner'
 import { LangProvider } from '@/lib/lang-context'
 import { SITE_URL, SITE_NAME } from '@/lib/site'
@@ -108,18 +107,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         ))}
 
-        {/* Capture l'événement d'installation PWA dès le chargement (Chrome le
-            déclenche souvent avant le montage de React → sinon il est perdu) */}
+        {/* Bloque la bannière/mini-infobar native d'installation PWA : le site
+            ne doit jamais proposer l'ajout à l'écran d'accueil. */}
         <script dangerouslySetInnerHTML={{
           __html: `
             window.addEventListener('beforeinstallprompt', function(e) {
               e.preventDefault();
-              window.__bipEvent = e;
-              window.dispatchEvent(new Event('bip-available'));
-            });
-            window.addEventListener('appinstalled', function() {
-              window.__bipEvent = null;
-              window.dispatchEvent(new Event('bip-installed'));
             });
           `
         }} />
@@ -181,7 +174,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SiteFooter />
           <MobileNav />
           <CookieBanner />
-          <InstallPrompt />
         </LangProvider>
       </body>
     </html>

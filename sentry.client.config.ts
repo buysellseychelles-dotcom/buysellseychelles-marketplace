@@ -13,9 +13,33 @@ if (dsn) {
     ignoreErrors: [
       'ResizeObserver loop limit exceeded',
       'ResizeObserver loop completed with undelivered notifications',
-      // Bruit spécifique aux navigateurs intégrés Facebook / Instagram (in-app browser)
-      'Error invoking enableButtonsClickedMetaDataLogging: Java object is gone',
+      // Bruit spécifique aux navigateurs intégrés Facebook / Instagram (in-app browser) :
+      // erreurs de leur propre code injecté, pas du site.
       "undefined is not an object (evaluating 'window.webkit.messageHandlers')",
+      'Error invoking postMessage: Java object is gone',
+      'Error invoking enableButtonsClickedMetaDataLogging: Java object is gone',
+      'Error invoking enableDidUserTypeOnKeyboardLogging: Java object is gone',
+      /Invalid or unexpected token/,
     ],
+    beforeSend(event) {
+      // Filtre global : toute erreur détectée comme provenant du navigateur
+      // intégré Facebook/Instagram est ignorée, même les variantes futures
+      // non listées explicitement ci-dessus.
+      const browserName = event.contexts?.browser?.name || ''
+      if (/facebook|instagram/i.test(browserName)) {
+        return null
+      }
+
+      // "Invalid or unexpected token" provenant spécifiquement du script
+      // browser_declutter injecté par ces navigateurs intégrés.
+      const message = event.exception?.values?.[0]?.value || event.message || ''
+      const frames = event.exception?.values?.flatMap((v) => v.stacktrace?.frames || []) || []
+      const fromBrowserDeclutter = frames.some((f) => f.filename?.includes('browser_declutter'))
+      if (fromBrowserDeclutter && /Invalid or unexpected token/i.test(message)) {
+        return null
+      }
+
+      return event
+    },
   })
 }
