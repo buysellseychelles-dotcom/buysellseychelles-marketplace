@@ -20,6 +20,12 @@ if (dsn) {
       'Error invoking enableButtonsClickedMetaDataLogging: Java object is gone',
       'Error invoking enableDidUserTypeOnKeyboardLogging: Java object is gone',
       /Invalid or unexpected token/,
+      // Safari (parseur natif de données structurées pour Siri/Spotlight) parcourt
+      // récursivement nos blocs JSON-LD et appelle .toLowerCase() sur "@context" même
+      // sur des sous-objets imbriqués (Offer, Person, ListItem...) qui n'en ont pas,
+      // conformément à la spec schema.org. Notre JSON-LD est correct, c'est un bug
+      // du parseur tiers, pas du site.
+      /undefined is not an object \(evaluating '.*@context.*\.toLowerCase'\)/,
     ],
     beforeSend(event) {
       // Filtre global : toute erreur détectée comme provenant du navigateur
