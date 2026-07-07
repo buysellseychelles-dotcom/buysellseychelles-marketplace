@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { useLang } from '@/lib/lang-context'
 import { t } from '@/lib/i18n'
 import { fileTooLarge } from '@/lib/upload-limits'
+import { markAllNotificationsRead } from '@/lib/mark-notifs-read'
 import { compressImage } from '@/lib/compress-image'
 import TenantDossierModal from '@/components/tenant-dossier-modal'
 import ReviewForm from '@/components/review-form'
@@ -71,13 +72,17 @@ export default function ChatPage() {
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null
 
+    // Ouvrir un message marque à la fois les messages ET les notifications comme
+    // lus, pour que les deux pastilles (conversations + cloche) disparaissent ensemble.
     const markRead = (userId: string) =>
       fetch('/api/messages/mark-read', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversationId: id, userId }),
-      }).then(() => window.dispatchEvent(new CustomEvent('bss-messages-read', { detail: { conversationId: id } })))
-        .catch(() => {})
+      }).then(() => {
+        window.dispatchEvent(new CustomEvent('bss-messages-read', { detail: { conversationId: id } }))
+        return markAllNotificationsRead(userId)
+      }).catch(() => {})
 
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()

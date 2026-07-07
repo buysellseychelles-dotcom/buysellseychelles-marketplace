@@ -110,17 +110,20 @@ export default function DashboardPage() {
         const cc: Record<string, number> = {}
         for (const c of convs ?? []) cc[c.listing_id] = (cc[c.listing_id] || 0) + 1
         setConvCounts(cc)
+      }
 
-        // Compteur de messages non lus (conversations où je suis vendeur)
-        const sellConvIds = (convs ?? []).map((c: any) => c.id)
-        if (sellConvIds.length > 0) {
-          const { count: unread } = await supabase.from('messages')
-            .select('id', { count: 'exact', head: true })
-            .in('conversation_id', sellConvIds)
-            .neq('sender_id', user.id)
-            .eq('read', false)
-          setUnreadMsgsDash(unread ?? 0)
-        }
+      // Compteur de messages non lus : même définition que la cloche / l'icône
+      // Messages du bandeau (toutes mes conversations, acheteur + vendeur).
+      const { data: myConvs } = await supabase.from('conversations')
+        .select('id').or(`user_id.eq.${user.id},seller_id.eq.${user.id}`)
+      const myConvIds = (myConvs ?? []).map((c: any) => c.id)
+      if (myConvIds.length > 0) {
+        const { count: unread } = await supabase.from('messages')
+          .select('id', { count: 'exact', head: true })
+          .in('conversation_id', myConvIds)
+          .neq('sender_id', user.id)
+          .eq('read', false)
+        setUnreadMsgsDash(unread ?? 0)
       }
 
       // Read via service-role API so the status persists across reloads

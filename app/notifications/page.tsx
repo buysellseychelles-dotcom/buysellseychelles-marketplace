@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useLang } from '@/lib/lang-context'
 import { t } from '@/lib/i18n'
+import { markAllNotificationsRead } from '@/lib/mark-notifs-read'
 
 type Notif = { id: string; title: string; body: string; read: boolean; created_at: string; link?: string }
 
@@ -28,8 +29,7 @@ export default function NotificationsPage() {
       setLoading(false)
 
       if (data && data.length > 0) {
-        await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false)
-        window.dispatchEvent(new CustomEvent('bss-notifs-read'))
+        await markAllNotificationsRead(user.id)
       }
     }
     load()

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useLang } from '@/lib/lang-context'
 import { t } from '@/lib/i18n'
+import { markAllNotificationsRead } from '@/lib/mark-notifs-read'
 
 type Conversation = {
   id: string
@@ -74,6 +75,9 @@ export default function ConversationsPage() {
       uid = user.id
       setUserId(user.id)
       await loadAll(user.id)
+      // Visiter la liste des conversations vaut visite de /notifications :
+      // la pastille de la cloche disparaît (mais pas celle des messages).
+      await markAllNotificationsRead(user.id)
 
       const channel = supabase
         .channel('conversations-list')
