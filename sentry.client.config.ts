@@ -13,12 +13,13 @@ if (dsn) {
     ignoreErrors: [
       'ResizeObserver loop limit exceeded',
       'ResizeObserver loop completed with undelivered notifications',
-      // Bruit spécifique aux navigateurs intégrés Facebook / Instagram (in-app browser) :
+      // Bruit spécifique aux navigateurs intégrés Facebook / Instagram / Twitter (in-app browser) :
       // erreurs de leur propre code injecté, pas du site.
       "undefined is not an object (evaluating 'window.webkit.messageHandlers')",
       'Error invoking postMessage: Java object is gone',
       'Error invoking enableButtonsClickedMetaDataLogging: Java object is gone',
       'Error invoking enableDidUserTypeOnKeyboardLogging: Java object is gone',
+      'Connection closed.',
       /Invalid or unexpected token/,
       // Safari (parseur natif de données structurées pour Siri/Spotlight) parcourt
       // récursivement nos blocs JSON-LD et appelle .toLowerCase() sur "@context" même
@@ -29,10 +30,10 @@ if (dsn) {
     ],
     beforeSend(event) {
       // Filtre global : toute erreur détectée comme provenant du navigateur
-      // intégré Facebook/Instagram est ignorée, même les variantes futures
-      // non listées explicitement ci-dessus.
+      // intégré Facebook/Instagram/Twitter est ignorée, même les variantes
+      // futures non listées explicitement ci-dessus.
       const browserName = event.contexts?.browser?.name || ''
-      if (/facebook|instagram/i.test(browserName)) {
+      if (/facebook|instagram|twitter/i.test(browserName)) {
         return null
       }
 
