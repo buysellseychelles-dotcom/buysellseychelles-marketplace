@@ -53,7 +53,6 @@ export default function MobileNav() {
   const { lang } = useLang()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [unreadMsgs, setUnreadMsgs] = useState(0)
-  const [unreadNotifs, setUnreadNotifs] = useState(0)
 
   // Mise à jour immédiate quand des messages sont lus ailleurs (conversations/[id])
   useEffect(() => {
@@ -82,23 +81,21 @@ export default function MobileNav() {
     // des callbacks .on(postgres_changes) sur un canal DÉJÀ souscrit →
     // "cannot add postgres_changes callbacks for realtime:unread-nav after subscribe()".
     let channel: ReturnType<typeof supabase.channel> | null = null
+    // Conversations de l'utilisateur courant, pour filtrer les events du canal
+    // Realtime côté client sans requêter la DB à chaque message envoyé par
+    // n'importe qui sur le site (voir plus bas).
+    let myConvIds = new Set<string>()
 
     const fetchMsgCount = async (userId: string) => {
       const { data: convs } = await supabase.from('conversations')
         .select('id').or(`user_id.eq.${userId},seller_id.eq.${userId}`)
-      const ids = (convs ?? []).map((c: any) => c.id)
-      if (ids.length === 0) return 0
+      myConvIds = new Set((convs ?? []).map((c: any) => c.id))
+      if (myConvIds.size === 0) return 0
       const { count } = await supabase.from('messages')
         .select('id', { count: 'exact', head: true })
-        .in('conversation_id', ids)
+        .in('conversation_id', [...myConvIds])
         .neq('sender_id', userId)
         .eq('read', false)
-      return count ?? 0
-    }
-
-    const fetchNotifCount = async (userId: string) => {
-      const { count } = await supabase.from('notifications')
-        .select('id', { count: 'exact', head: true }).eq('user_id', userId).eq('read', false)
       return count ?? 0
     }
 
@@ -112,16 +109,21 @@ export default function MobileNav() {
 
     const setup = async (userId: string) => {
       setUnreadMsgs(await fetchMsgCount(userId))
-      setUnreadNotifs(await fetchNotifCount(userId))
 
       // On repart toujours d'un canal propre avant de souscrire.
       teardownChannel()
+      // Le plan Supabase gratuit n'a que 15 connexions simultanées : avant,
+      // CHAQUE message créé par N'IMPORTE QUEL utilisateur du site déclenchait
+      // une re-requête DB pour TOUS les clients connectés (canal 'messages'
+      // sans filtre). On incrémente désormais le compteur localement (le
+      // message est déjà là dans le payload) — la décrémentation se fait via
+      // l'event 'bss-messages-read' (déclenché par mes propres actions de lecture).
       channel = supabase.channel('unread-nav')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, async () => {
-          setUnreadMsgs(await fetchMsgCount(userId))
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, async () => {
-          setUnreadNotifs(await fetchNotifCount(userId))
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+          const msg = payload.new as { conversation_id: string; sender_id: string }
+          if (msg.sender_id !== userId && myConvIds.has(msg.conversation_id)) {
+            setUnreadMsgs(n => n + 1)
+          }
         })
         .subscribe()
     }
@@ -129,7 +131,7 @@ export default function MobileNav() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null
       setIsLoggedIn(!!u)
-      if (!u) { setUnreadMsgs(0); setUnreadNotifs(0); teardownChannel(); return }
+      if (!u) { setUnreadMsgs(0); teardownChannel(); return }
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') setup(u.id)
     })
 

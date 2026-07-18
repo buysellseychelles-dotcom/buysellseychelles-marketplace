@@ -92,19 +92,30 @@ const getHomeData = unstable_cache(
       .or(`ends_at.is.null,ends_at.gte.${nowIso}`)
       .order('created_at', { ascending: false }).limit(5)
 
-    const sectionResults = await Promise.all(
-      HOME_SECTIONS.map(s => {
-        const cats = CATEGORY_GROUP_MAP[s.value] ?? [s.value]
-        const q = supabase.from('listings')
-          .select('id,title,price,currency,location,category,status,created_at,user_id,boosted,boost_expires_at,listing_images(image_url)')
-          .not('status', 'in', '("sold","expired")')
-          .order('boosted', { ascending: false })  // featured listings first
-          .order('created_at', { ascending: false })
-          .limit(6)
-        return cats.length > 1 ? q.in('category', cats) : q.eq('category', cats[0])
-      })
-    )
-    const sectionData = sectionResults.map(r => r.data ?? [])
+    // Une seule requête pour toutes les sections (au lieu d'une par section) —
+    // le plan Supabase gratuit n'a que 15 connexions simultanées, 16 requêtes
+    // parallèles à chaque chargement de Home suffisaient à toutes les épuiser.
+    const { data: recentActive } = await supabase.from('listings')
+      .select('id,title,price,currency,location,category,status,created_at,user_id,boosted,boost_expires_at,listing_images(image_url)')
+      .not('status', 'in', '("sold","expired")')
+      .order('boosted', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(800)
+
+    const byCategory = new Map<string, any[]>()
+    for (const item of recentActive ?? []) {
+      const arr = byCategory.get(item.category)
+      if (arr) arr.push(item); else byCategory.set(item.category, [item])
+    }
+    const sectionData = HOME_SECTIONS.map(s => {
+      const cats = CATEGORY_GROUP_MAP[s.value] ?? [s.value]
+      return cats
+        .flatMap(c => byCategory.get(c) ?? [])
+        .sort((a, b) =>
+          (b.boosted ? 1 : 0) - (a.boosted ? 1 : 0) ||
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 6)
+    })
 
     // Which sellers are PRO? (single lookup → gold badge on their cards)
     const sellerIds = [...new Set(

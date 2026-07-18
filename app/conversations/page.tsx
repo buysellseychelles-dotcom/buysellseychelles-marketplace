@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -27,6 +27,10 @@ export default function ConversationsPage() {
   const [unreadByConv, setUnreadByConv] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  // Mes ids de conversation connus, pour filtrer côté client les events du
+  // canal Realtime 'messages' (non filtrable côté serveur par participant)
+  // sans requêter la DB pour les messages d'autres conversations.
+  const convIdsRef = useRef<Set<string>>(new Set())
 
   const loadAll = async (uid: string) => {
     const { data } = await supabase
@@ -35,28 +39,36 @@ export default function ConversationsPage() {
       .or(`user_id.eq.${uid},seller_id.eq.${uid}`)
       .order('updated_at', { ascending: false })
 
-    if (data) {
-      // Exclut les conversations que CET utilisateur a masquées de sa liste.
-      const visible = data.filter((conv: any) =>
-        conv.user_id === uid ? !conv.hidden_by_user : !conv.hidden_by_seller
-      )
-      const enriched = await Promise.all(visible.map(async (conv: any) => {
-        const { data: listing } = await supabase
-          .from('listings')
-          .select('title')
-          .eq('id', conv.listing_id)
-          .single()
-        return { ...conv, listing: listing ?? null, other_id: conv.user_id === uid ? conv.seller_id : conv.user_id }
-      }))
-      setConversations(enriched)
-    }
+    if (!data) { setLoading(false); return }
 
-    // Unread count per conversation
-    const { data: unread } = await supabase
-      .from('messages')
-      .select('conversation_id')
-      .neq('sender_id', uid)
-      .eq('read', false)
+    // Exclut les conversations que CET utilisateur a masquées de sa liste.
+    const visible = data.filter((conv: any) =>
+      conv.user_id === uid ? !conv.hidden_by_user : !conv.hidden_by_seller
+    )
+
+    // Un seul aller-retour pour tous les titres d'annonces (au lieu d'une
+    // requête par conversation) — le plan gratuit Supabase n'a que 15
+    // connexions simultanées, une conversation par requête les épuisait vite.
+    const listingIds = [...new Set(visible.map((c: any) => c.listing_id))]
+    const { data: listings } = listingIds.length
+      ? await supabase.from('listings').select('id, title').in('id', listingIds)
+      : { data: [] as { id: string; title: string }[] }
+    const titleById = new Map((listings ?? []).map((l: any) => [l.id, l.title]))
+
+    setConversations(visible.map((conv: any) => ({
+      ...conv,
+      listing: titleById.has(conv.listing_id) ? { title: titleById.get(conv.listing_id) } : null,
+      other_id: conv.user_id === uid ? conv.seller_id : conv.user_id,
+    })))
+
+    // Unread count per conversation — restreint à MES conversations (avant,
+    // la requête sans filtre conversation_id ramenait les messages non lus
+    // de tout le site).
+    const convIds = visible.map((c: any) => c.id)
+    convIdsRef.current = new Set(convIds)
+    const { data: unread } = convIds.length
+      ? await supabase.from('messages').select('conversation_id').in('conversation_id', convIds).neq('sender_id', uid).eq('read', false)
+      : { data: [] as { conversation_id: string }[] }
 
     const counts: Record<string, number> = {}
     for (const msg of unread ?? []) {
@@ -79,10 +91,21 @@ export default function ConversationsPage() {
       // la pastille de la cloche disparaît (mais pas celle des messages).
       await markAllNotificationsRead(user.id)
 
+      // Le plan Supabase gratuit n'a que 15 connexions simultanées : avant,
+      // une conversation ou un message créé par N'IMPORTE QUI sur le site
+      // déclenchait un loadAll() complet pour TOUS les clients ayant cette
+      // page ouverte (canaux sans filtre). 'conversations' se filtre
+      // côté serveur (participant = moi) ; 'messages' n'a pas de colonne
+      // participant, donc on filtre côté client via mes ids de conversation
+      // déjà connus (convIdsRef), sans requêter la DB pour le reste.
       const channel = supabase
         .channel('conversations-list')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => uid && loadAll(uid))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => uid && loadAll(uid))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `user_id=eq.${user.id}` }, () => uid && loadAll(uid))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations', filter: `seller_id=eq.${user.id}` }, () => uid && loadAll(uid))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, (payload) => {
+          const convId = (payload.new as any)?.conversation_id ?? (payload.old as any)?.conversation_id
+          if (uid && convId && convIdsRef.current.has(convId)) loadAll(uid)
+        })
         .subscribe()
 
       const onRead = (e: Event) => {
