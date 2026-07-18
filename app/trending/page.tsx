@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   alternates: { canonical: `${SITE_URL}/trending` },
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function TrendingPage() {
   const { data } = await supabase
     .from('listings')
