@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: 'Browse listings on a map of the Seychelles islands.',
 }
 
+export const dynamic = 'force-dynamic'
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

@@ -9,6 +9,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+export const dynamic = 'force-dynamic'
+
 const STATIC_PAGES: MetadataRoute.Sitemap = [
   { url: SITE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
   { url: `${SITE_URL}/trending`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
