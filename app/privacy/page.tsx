@@ -15,7 +15,7 @@ export default function PrivacyPage() {
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-      <p className="text-sm text-gray-400 mb-8">Last updated: June 2026</p>
+      <p className="text-sm text-gray-400 mb-8">Last updated: August 2026</p>
 
       <div className="prose prose-sm max-w-none space-y-6 text-gray-700">
 
@@ -34,6 +34,7 @@ export default function PrivacyPage() {
             Business Reg. No.: Coming soon<br />
             Contact: <a href="/contact" className="text-black underline">contact form</a>
           </p>
+          <p className="mt-2 text-sm text-gray-500">Note: full legal/registered name, physical address, and business registration number will be published here as soon as available. Google Play&apos;s Data Safety review may require this information before final app approval.</p>
         </section>
 
         <section>
@@ -43,10 +44,23 @@ export default function PrivacyPage() {
           <p className="mt-2"><strong>Usage data:</strong> Pages visited, search queries, device type, browser, and IP address — collected automatically via analytics tools.</p>
           <p className="mt-2"><strong>Messages:</strong> Private messages exchanged between users on the platform are stored securely and are accessible only to the conversation participants.</p>
           <p className="mt-2"><strong>Notifications and alerts:</strong> Preferences you set for email or in-app alerts.</p>
+          <p className="mt-2"><strong>Camera and photo library access (mobile app):</strong> Used only to let you take or select photos when creating or editing a listing. We never access your camera or photo library without your explicit action.</p>
+          <p className="mt-2"><strong>Push notifications (mobile app):</strong> Used to alert you about new messages, changes to your saved listings, and important account or service updates. You can disable push notifications at any time in your device settings.</p>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">4. How We Use Your Data</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">4. Mobile App Permissions</h2>
+          <p>Our Android mobile app requests the following device permissions. Each is used solely for the purpose described below, and only when you actively use the related feature:</p>
+          <ul className="list-disc pl-5 space-y-1 mt-2">
+            <li><strong>Camera</strong> — to let you take a photo directly from the app when creating or editing a listing.</li>
+            <li><strong>Photos / Media / Storage (gallery access)</strong> — to let you select existing photos from your device when creating or editing a listing, or updating your profile picture.</li>
+            <li><strong>Notifications</strong> — to deliver push notifications for new messages, updates to your saved listings, and important account alerts.</li>
+          </ul>
+          <p className="mt-2">We do not request any permission beyond what is needed for these features, and none of these permissions are used to access your data in the background without your action.</p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-bold text-gray-900 mb-2">5. How We Use Your Data</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>To provide and maintain the BuySellSeychelles service</li>
             <li>To send transactional emails (message notifications, listing alerts, account verification)</li>
@@ -58,7 +72,7 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">5. Legal Basis for Processing</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">6. Legal Basis for Processing</h2>
           <p>Under the Data Protection Act, 2023, we process your personal data on the following grounds:</p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li><strong>Performance of a service</strong> you have requested (e.g. creating your account, publishing your listings, delivering messages).</li>
@@ -69,12 +83,12 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">6. Data Storage and Security</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">7. Data Storage and Security</h2>
           <p>Your data is stored securely using <strong>Supabase</strong>, a cloud database provider with industry-standard encryption at rest and in transit. Transactional emails are sent via <strong>Resend</strong>. We take reasonable technical and organisational measures to protect your data from unauthorised access.</p>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">7. Cookies and Analytics</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">8. Cookies and Analytics</h2>
           <p>We use cookies and similar technologies to:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Keep you signed in to your account (essential cookies)</li>
@@ -85,19 +99,20 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">8. Third-Party Services</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">9. Third-Party Services</h2>
           <p>We use the following third-party services that may process your data:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Supabase</strong> — database and authentication</li>
             <li><strong>Resend</strong> — transactional email delivery</li>
             <li><strong>Vercel</strong> — hosting and content delivery</li>
             <li><strong>Google Analytics</strong> — anonymous usage statistics</li>
+            <li><strong>Expo / EAS</strong> — mobile app build infrastructure and push notification delivery for the BuySellSeychelles mobile app</li>
           </ul>
           <p className="mt-2">Each provider operates under their own privacy policy and data processing agreements.</p>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">9. International Data Transfers</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">10. International Data Transfers</h2>
           <p>Because we rely on the cloud providers listed above, your personal data is stored and processed <strong>outside the Republic of Seychelles</strong>, in particular:</p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li><strong>Supabase</strong> — database and authentication (servers in Singapore)</li>
@@ -107,12 +122,12 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">10. Data Retention</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">11. Data Retention</h2>
           <p>We retain your account data for as long as your account is active. Listings are retained until you delete them or your account is closed. You may request deletion of your account and all associated data at any time by contacting us.</p>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">11. Your Rights</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">12. Your Rights</h2>
           <p>Under the Data Protection Act, 2023, you have the right to:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Be informed whether we hold personal data about you and to access that data (subject access request)</li>
@@ -127,17 +142,17 @@ export default function PrivacyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">12. Children's Privacy</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">13. Children's Privacy</h2>
           <p>BuySellSeychelles is not intended for users under the age of 18. We do not knowingly collect personal data from minors. If you believe a minor has created an account, please contact us so we can take appropriate action.</p>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">13. Changes to This Policy</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">14. Changes to This Policy</h2>
           <p>We may update this Privacy Policy from time to time. We will notify registered users of significant changes by email or via an in-app notification. Continued use of the platform constitutes acceptance of the updated policy.</p>
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-gray-900 mb-2">14. Contact</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-2">15. Contact</h2>
           <p>For any privacy-related questions or requests, <a href="/contact" className="text-black underline">contact us via our contact form</a>.</p>
         </section>
 
