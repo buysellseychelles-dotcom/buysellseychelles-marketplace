@@ -127,11 +127,12 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .select('id', { count: 'exact', head: true })
     .eq('listing_id', id)
 
-  // Note moyenne du vendeur (affichée sur la carte profil)
+  // Avis du vendeur (note moyenne pour la carte profil + JSON-LD aggregateRating/review)
   const { data: sellerReviews } = await supabase
     .from('reviews')
-    .select('rating')
+    .select('rating, comment, created_at, reviewer_role')
     .eq('seller_id', listing.user_id)
+    .order('created_at', { ascending: false })
   const sellerReviewCount = sellerReviews?.length ?? 0
   const sellerAvgRating = sellerReviewCount > 0
     ? sellerReviews!.reduce((s: number, r: any) => s + r.rating, 0) / sellerReviewCount
@@ -176,7 +177,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   const displayIsland = locationParts.length > 1 ? locationParts[locationParts.length - 1] : (listing.location ?? null)
   const displayDistrict = locationParts.length > 1 ? locationParts.slice(0, -1).join(', ') : null
 
-  const jsonLd = {
+  const jsonLd: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: listing.title,
@@ -193,6 +194,33 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       url: shareUrl,
       seller: { '@type': 'Person', name: sellerDisplayName ?? listing.location ?? 'Seychelles' },
     },
+  }
+
+  // aggregateRating / review omis si le vendeur n'a aucun avis (recommandation
+  // Google : ne pas publier de champs vides plutôt que d'inventer des valeurs).
+  if (sellerReviewCount > 0 && sellerAvgRating !== null) {
+    jsonLd.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: Number(sellerAvgRating.toFixed(1)),
+      reviewCount: sellerReviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    }
+    jsonLd.review = sellerReviews!.slice(0, 20).map((r: any) => ({
+      '@type': 'Review',
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: r.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      author: {
+        '@type': 'Person',
+        name: r.reviewer_role === 'seller' ? 'Verified Seller' : 'Verified Buyer',
+      },
+      datePublished: r.created_at,
+      ...(r.comment ? { reviewBody: r.comment } : {}),
+    }))
   }
 
   // Fil d'Ariane : Accueil > Catégorie > Annonce (rich result Google).
